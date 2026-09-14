@@ -360,39 +360,7 @@ function toggleMenu() {
 // ========== INPUT TÁCTIL (solo móvil) ==========
 let jx = 0, jy = 0, ja = false, jsX = 0, jsY = 0, jid = null;
 
-// Touch
-canvas.addEventListener('touchstart', e => {
-  e.preventDefault();
-  const t = e.changedTouches[0];
-  const rect = canvas.getBoundingClientRect();
-  const tx = t.clientX - rect.left;
-  if (tx < VW * SCALE * 0.5) {
-    ja = true; jid = t.identifier;
-    jsX = t.clientX; jsY = t.clientY;
-    jx = 0; jy = 0;
-  }
-}, { passive: false });
-
-canvas.addEventListener('touchmove', e => {
-  e.preventDefault();
-  if (!ja) return;
-  for (let i = 0; i < e.changedTouches.length; i++) {
-    const t = e.changedTouches[i];
-    if (t.identifier === jid) {
-      const dx = t.clientX - jsX, dy = t.clientY - jsY;
-      const d = Math.sqrt(dx * dx + dy * dy), m = 20;
-      if (d > m) { jx = dx * m / d; jy = dy * m / d; }
-      else { jx = dx / m; jy = dy / m; }
-    }
-  }
-}, { passive: false });
-
-canvas.addEventListener('touchend', e => {
-  for (let i = 0; i < e.changedTouches.length; i++)
-    if (e.changedTouches[i].identifier === jid) {
-      ja = false; jx = 0; jy = 0; jid = null;
-    }
-}, { passive: false });
+// Nota: El joystick usa su propio elemento div (#joystick)
 
 // Botones UI
 document.getElementById('btn-atk').onclick = doAttack;
@@ -411,16 +379,17 @@ document.getElementById('m-load').onclick = () => {
 document.getElementById('m-menu').onclick = () => showDialogue('Menu principal: proximamente...');
 document.getElementById('inv-close').onclick = toggleInventory;
 
-// Joystick
+// Joystick - control directo (sin teclado)
 (function () {
   const joy = document.getElementById('joystick');
   const knob = document.getElementById('joy-knob');
-  let active = false, cx = 0, cy = 0, curKeys = [];
+  let active = false, cx = 0, cy = 0;
 
   function start(e) {
     active = true;
     const r = joy.getBoundingClientRect();
-    cx = r.left + r.width / 2; cy = r.top + r.height / 2;
+    cx = r.left + r.width / 2;
+    cy = r.top + r.height / 2;
     move(e);
   }
 
@@ -429,33 +398,23 @@ document.getElementById('inv-close').onclick = toggleInventory;
     e.preventDefault();
     const t = e.touches ? e.touches[0] : e;
     const dx = t.clientX - cx, dy = t.clientY - cy;
-    const d = Math.min(Math.sqrt(dx * dx + dy * dy), 25);
+    const maxR = 35;
+    const d = Math.min(Math.sqrt(dx * dx + dy * dy), maxR);
     const a = Math.atan2(dy, dx);
+
     knob.style.transform = `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d}px))`;
 
-    if (d > 6) {
-      const deg = (a * 180 / Math.PI + 360) % 360;
-      let k = [];
-      if (deg >= 337.5 || deg < 22.5) k = ['ArrowRight'];
-      else if (deg < 67.5) k = ['ArrowRight', 'ArrowDown'];
-      else if (deg < 112.5) k = ['ArrowDown'];
-      else if (deg < 157.5) k = ['ArrowLeft', 'ArrowDown'];
-      else if (deg < 202.5) k = ['ArrowLeft'];
-      else if (deg < 247.5) k = ['ArrowLeft', 'ArrowUp'];
-      else if (deg < 292.5) k = ['ArrowUp'];
-      else k = ['ArrowRight', 'ArrowUp'];
+    // Normalizar a -1..1
+    jx = (Math.cos(a) * d) / maxR;
+    jy = (Math.sin(a) * d) / maxR;
 
-      curKeys.forEach(ky => { if (!k.includes(ky)) document.dispatchEvent(new KeyboardEvent('keyup', { key: ky })); });
-      /* teclado removido */
-      curKeys = k;
-    } else end();
+    if (d < 5) { jx = 0; jy = 0; }
   }
 
   function end() {
     active = false;
+    jx = 0; jy = 0;
     knob.style.transform = 'translate(-50%, -50%)';
-    curKeys.forEach(k => {});
-    curKeys = [];
   }
 
   joy.addEventListener('touchstart', start, { passive: false });
