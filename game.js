@@ -357,9 +357,8 @@ function toggleMenu() {
   m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
 }
 
-// ========== CONTROLES ==========
+// ========== INPUT TÁCTIL (solo móvil) ==========
 let jx = 0, jy = 0, ja = false, jsX = 0, jsY = 0, jid = null;
-const keys = {};
 
 // Touch
 canvas.addEventListener('touchstart', e => {
@@ -394,20 +393,6 @@ canvas.addEventListener('touchend', e => {
       ja = false; jx = 0; jy = 0; jid = null;
     }
 }, { passive: false });
-
-// Teclado
-document.addEventListener('keydown', e => {
-  keys[e.key] = true;
-  if (e.key === ' ') { e.preventDefault(); doAttack(); }
-  if (e.key === 'e') doInteract();
-  if (e.key === 'q') gatherResource();
-  if (e.key === 'i') toggleInventory();
-  if (e.key === 'Escape') toggleMenu();
-  // Selección de slot
-  const num = parseInt(e.key);
-  if (num >= 1 && num <= 8) player.selectedSlot = num - 1;
-});
-document.addEventListener('keyup', e => { keys[e.key] = false; });
 
 // Botones UI
 document.getElementById('btn-atk').onclick = doAttack;
@@ -461,7 +446,7 @@ document.getElementById('inv-close').onclick = toggleInventory;
       else k = ['ArrowRight', 'ArrowUp'];
 
       curKeys.forEach(ky => { if (!k.includes(ky)) document.dispatchEvent(new KeyboardEvent('keyup', { key: ky })); });
-      k.forEach(ky => { if (!curKeys.includes(ky)) document.dispatchEvent(new KeyboardEvent('keydown', { key: ky })); });
+      /* teclado removido */
       curKeys = k;
     } else end();
   }
@@ -469,7 +454,7 @@ document.getElementById('inv-close').onclick = toggleInventory;
   function end() {
     active = false;
     knob.style.transform = 'translate(-50%, -50%)';
-    curKeys.forEach(k => document.dispatchEvent(new KeyboardEvent('keyup', { key: k })));
+    curKeys.forEach(k => {});
     curKeys = [];
   }
 
@@ -716,12 +701,7 @@ function render() {
 
 // ========== UPDATE ==========
 function update(dt) {
-  // Input
   let mx = 0, my = 0;
-  if (keys['ArrowUp'] || keys['w']) my = -1;
-  if (keys['ArrowDown'] || keys['s']) my = 1;
-  if (keys['ArrowLeft'] || keys['a']) mx = -1;
-  if (keys['ArrowRight'] || keys['d']) mx = 1;
   if (ja) { mx = jx; my = jy; }
 
   const speed = 180;
