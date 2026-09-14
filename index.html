@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PachaMirai</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;image-rendering:pixelated}
-html,body{width:100vw;height:100vh;overflow:hidden;background:#1a3a1a}
-canvas{display:block;position:fixed;top:0;left:0;width:100vw;height:100vh}
+*{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none}
+html,body{width:100vw;height:100vh;overflow:hidden;background:#1a3a1a;margin:0}
+canvas{display:block;position:fixed;top:0;left:0;width:100vw;height:100vh;image-rendering:pixelated}
 #ui{position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:10}
 #ui>div{pointer-events:auto}
 
@@ -107,7 +107,7 @@ canvas{display:block;position:fixed;top:0;left:0;width:100vw;height:100vh}
 'use strict';
 
 // ========== CONSTANTES ==========
-const T = 16, VW = 480, VH = 270, WW = 128, WH = 128;
+const T = 16, VW = 800, VH = 450, WW = 128, WH = 128;
 
 // ========== CANVAS ==========
 const canvas = document.getElementById('c');
@@ -118,10 +118,17 @@ let W, H, SCALE = 1, OX = 0, OY = 0;
 
 function resize() {
   W = window.innerWidth; H = window.innerHeight;
-  canvas.width = W; canvas.height = H;
+  // Escala entera para mantener pixel art nítido
   SCALE = Math.max(1, Math.floor(Math.min(W / VW, H / VH)));
-  OX = Math.floor((W - VW * SCALE) / 2);
-  OY = Math.floor((H - VH * SCALE) / 2);
+  const renderW = VW * SCALE;
+  const renderH = VH * SCALE;
+  canvas.width = renderW;
+  canvas.height = renderH;
+  canvas.style.width = renderW + 'px';
+  canvas.style.height = renderH + 'px';
+  canvas.style.left = ((W - renderW) / 2) + 'px';
+  canvas.style.top = ((H - renderH) / 2) + 'px';
+  ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
 }
 window.addEventListener('resize', resize);
 
@@ -519,8 +526,9 @@ function drawAnimal(x, y, type, s) {
 
 function render() {
   const t = performance.now();
+  // Limpiar canvas
   ctx.fillStyle = '#1a3a1a';
-  ctx.fillRect(-OX / SCALE, -OY / SCALE, W / SCALE, H / SCALE);
+  ctx.fillRect(0, 0, VW, VH);
 
   const cx = player.x - VW / 2 + T / 2;
   const cy = player.y - VH / 2 + T / 2;
@@ -528,15 +536,15 @@ function render() {
   const sy = Math.max(0, Math.floor(cy / T));
   const ex = Math.min(WW - 1, Math.ceil((cx + VW) / T));
   const ey = Math.min(WH - 1, Math.ceil((cy + VH) / T));
-  const s = T * SCALE;
+  const s = T;
 
   // Tiles
   for (let ty = sy; ty <= ey; ty++) {
     for (let tx = sx; tx <= ex; tx++) {
       const tile = world[ty][tx];
       const v = variants[ty][tx];
-      const x = (tx * T - cx) * SCALE + OX;
-      const y = (ty * T - cy) * SCALE + OY;
+      const x = tx * T - cx;
+      const y = ty * T - cy;
 
       switch (tile) {
         case 0: drawGrass(x, y, s, v); break;
@@ -553,9 +561,9 @@ function render() {
 
   // Entidades
   for (const e of entities) {
-    const ex2 = (e.x - cx) * SCALE + OX;
-    const ey2 = (e.y - cy) * SCALE + OY;
-    if (ex2 < -30 || ex2 > W + 30 || ey2 < -30 || ey2 > H + 30) continue;
+    const ex2 = e.x - cx;
+    const ey2 = e.y - cy;
+    if (ex2 < -30 || ex2 > VW + 30 || ey2 < -30 || ey2 > VH + 30) continue;
 
     if (e.type === 'animal') {
       drawAnimal(ex2, ey2, e.animal, s);
@@ -578,8 +586,8 @@ function render() {
   }
 
   // Jugador
-  const px = (player.x - cx) * SCALE + OX;
-  const py = (player.y - cy) * SCALE + OY;
+  const px = player.x - cx;
+  const py = player.y - cy;
   drawPlayer(px, py, s, player.dir, player.state, player.frame, t);
 }
 
@@ -716,7 +724,7 @@ function update(dt) {
   if (keys['ArrowRight'] || keys['d']) mx = 1;
   if (ja) { mx = jx; my = jy; }
 
-  const sp = 80;
+  const sp = 120;
   player.vx = mx * sp; player.vy = my * sp;
   player.x += player.vx * dt; player.y += player.vy * dt;
   player.x = Math.max(0, Math.min(WW * T - T, player.x));
