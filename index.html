@@ -247,7 +247,7 @@ function update(dt){
 let last=0;
 function loop(ts){const dt=Math.min((ts-last)/1000,0.1);last=ts;update(dt);render();renderMinimap();requestAnimationFrame(loop)}
 
-resize();last=performance.now();requestAnimationFrame(loop);
+window.addEventListener('load',()=>{resize();last=performance.now();requestAnimationFrame(loop)});
 </script>
 </body>
 </html>
