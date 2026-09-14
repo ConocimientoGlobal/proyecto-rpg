@@ -59,12 +59,14 @@ let W,H,SCALE=1;
 
 function resize(){
   W=innerWidth;H=innerHeight;
-  SCALE=Math.max(1,Math.floor(Math.min(W/VW,H/VH)));
+  SCALE=Math.max(2,Math.floor(Math.min(W/VW,H/VH)));
   c.width=VW*SCALE;c.height=VH*SCALE;
   c.style.width=(VW*SCALE)+'px';c.style.height=(VH*SCALE)+'px';
   c.style.left=((W-VW*SCALE)/2)+'px';c.style.top=((H-VH*SCALE)/2)+'px';
   ctx.setTransform(SCALE,0,0,SCALE,0,0);
   ctx.imageSmoothingEnabled=false;
+  ctx.fillStyle='#1a3a1a';
+  ctx.fillRect(0,0,VW,VH);
 }
 
 function hsh(x,y){return ((x*374761393+y*668265263)^0x5bf03635)&0x7fffffff}
