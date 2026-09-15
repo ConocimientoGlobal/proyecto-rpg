@@ -160,5 +160,8 @@ const drawHUD = (ctx: CanvasRenderingContext2D, player: Playable, canvas: HTMLCa
     ctx.font = "bold 16px monospace";
     ctx.fillText("Restart to play again", canvas.width / 2, canvas.height / 2 + 30);
     ctx.textAlign = "start";
+    
+    const restartBtn = document.getElementById('restart-btn');
+    if (restartBtn) restartBtn.style.display = 'block';
   }
 };
