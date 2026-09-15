@@ -9,10 +9,8 @@ import { hasKey } from "../utils/misc";
 type MotionControlArgs = {
   ctx: CanvasRenderingContext2D;
   state: State;
-  bg: Sprite;
   player: Playable;
   enemies: Playable[];
-  fg: Sprite;
   colliders: BoxCollider[];
 };
 
@@ -40,34 +38,54 @@ const motionControl = ({
 
   if (controller.isPressed("up")) {
     futureKeyState.y = -MOVESPEED;
-  } else if (controller.isPressed("left")) {
+  }
+  if (controller.isPressed("left")) {
     futureKeyState.x = -MOVESPEED;
-  } else if (controller.isPressed("down")) {
+  }
+  if (controller.isPressed("down")) {
     futureKeyState.y = MOVESPEED;
-  } else if (controller.isPressed("right")) {
+  }
+  if (controller.isPressed("right")) {
     futureKeyState.x = MOVESPEED;
   }
 
-  const playerCollisions = colliders.some((collider: BoxCollider) =>
-    checkCollision(player, collider, futureKeyState)
+  // Check collisions for each axis separately
+  const playerCollisionsX = colliders.some((collider: BoxCollider) =>
+    checkCollision(player, collider, { x: futureKeyState.x, y: 0 })
+  );
+  const playerCollisionsY = colliders.some((collider: BoxCollider) =>
+    checkCollision(player, collider, { x: 0, y: futureKeyState.y })
   );
 
   const movementDirection = controller.getMovement();
-  if (!movementDirection) {
+  
+  if (!movementDirection && futureKeyState.x === 0 && futureKeyState.y === 0) {
     player.animate("idle");
   } else {
-    const { axis, velocity } = controller.motion[movementDirection];
-    player.animate(movementDirection);
+    // Determine animation direction based on input
+    if (Math.abs(futureKeyState.x) > Math.abs(futureKeyState.y)) {
+      player.animate(futureKeyState.x > 0 ? "right" : "left");
+    } else if (futureKeyState.y !== 0) {
+      player.animate(futureKeyState.y > 0 ? "down" : "up");
+    } else if (futureKeyState.x !== 0) {
+      player.animate(futureKeyState.x > 0 ? "right" : "left");
+    }
+    
+    // Move enemies toward player
     enemies.forEach(enemy => {
       if (enemy.alive()) enemy.follow(player, colliders);
     });
 
-    if (!playerCollisions && hasKey(player.position, axis)) {
-      // Player moves through the world (original November logic)
-      player.position[axis] += velocity;
+    // Apply movement with collision (move player, not camera)
+    if (futureKeyState.x !== 0 && !playerCollisionsX) {
+      player.position.x += futureKeyState.x;
+    }
+    if (futureKeyState.y !== 0 && !playerCollisionsY) {
+      player.position.y += futureKeyState.y;
     }
   }
 
+  // Enemy attacks with cooldown
   enemyAttackTimer++;
   if (enemyAttackTimer >= ENEMY_ATTACK_COOLDOWN) {
     enemyAttackTimer = 0;
@@ -78,16 +96,21 @@ const motionControl = ({
     });
   }
 
+  // Player regen
   player.regen();
+  
+  // Player attacks - find closest enemy in range
   const attackChoice = controller.getAttack();
   if (attackChoice !== null && enemies.length > 0) {
-    const closestEnemy = enemies.reduce((closest, enemy) => {
-      if (!enemy.alive()) return closest;
-      const distToEnemy = Math.abs(enemy.position.x - player.position.x) + Math.abs(enemy.position.y - player.position.y);
-      const distToClosest = Math.abs(closest.position.x - player.position.x) + Math.abs(closest.position.y - player.position.y);
-      return distToEnemy < distToClosest ? enemy : closest;
-    });
-    player.attack(closestEnemy, attackChoice, ctx);
+    const aliveEnemies = enemies.filter(e => e.alive());
+    if (aliveEnemies.length > 0) {
+      const closestEnemy = aliveEnemies.reduce((closest, enemy) => {
+        const distToEnemy = Math.abs(enemy.position.x - player.position.x) + Math.abs(enemy.position.y - player.position.y);
+        const distToClosest = Math.abs(closest.position.x - player.position.x) + Math.abs(closest.position.y - player.position.y);
+        return distToEnemy < distToClosest ? enemy : closest;
+      });
+      player.attack(closestEnemy, attackChoice, ctx);
+    }
   }
 };
 
@@ -117,7 +140,7 @@ export const animationBuilder = ({
     
     ctx.scale(scale, scale);
     
-    // Center the view on the player (centered horizontally)
+    // Center the view on the player
     const offsetX = -player.position.x + (MAP_WIDTH / 2);
     const offsetY = -player.position.y + (MAP_HEIGHT / 2);
     ctx.translate(offsetX, offsetY);
@@ -138,7 +161,7 @@ export const animationBuilder = ({
     drawHUD(ctx, player, canvas);
     
     window.requestAnimationFrame(animate);
-    motionControl({ ctx, state, bg, player, enemies, fg, colliders });
+    motionControl({ ctx, state, player, enemies, colliders });
   };
   animate();
 };
