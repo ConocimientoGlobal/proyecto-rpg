@@ -1,0 +1,4 @@
+# Configuración para Render.com
+# 1. Conectar este repo a Render
+# 2. Build Command: npm ci && npm run build
+# 3. Start Command: node start.mjs
