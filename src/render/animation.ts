@@ -4,7 +4,6 @@ import { getColliders, checkCollision } from "./collider";
 import { BoxCollider } from "./collider";
 import { State } from "../state";
 import { Sprite, Playable } from "../sprites";
-import { hasKey, randomInt } from "../utils/misc";
 
 type MotionControlArgs = {
   ctx: CanvasRenderingContext2D;
@@ -25,7 +24,7 @@ type AnimationBuilderArgs = {
   canvas: HTMLCanvasElement;
 };
 
-const ENEMY_ATTACK_COOLDOWN = 60;
+const ENEMY_ATTACK_COOLDOWN = 90;
 let enemyAttackTimer = 0;
 
 const motionControl = ({
@@ -52,22 +51,27 @@ const motionControl = ({
     checkCollision(player, collider, futureKeyState)
   );
 
-  const moveMobile = (mobile: BoxCollider | Sprite) => {
-    const movementDirection = controller.getMovement();
-    if (!movementDirection) {
-      player.animate("idle");
-      return;
-    }
-    const { axis, velocity } = controller.motion[movementDirection];
+  const movementDirection = controller.getMovement();
+  if (!movementDirection) {
+    player.animate("idle");
+  } else {
+    const { velocity } = controller.motion[movementDirection];
     player.animate(movementDirection);
-    enemies.forEach(enemy => enemy.follow(player, colliders))
+    enemies.forEach(enemy => {
+      if (enemy.alive()) enemy.follow(player, colliders);
+    });
 
-    if (!playerCollisions && hasKey(mobile.position, axis)) {
-      mobile.position[axis] += velocity;
+    if (!playerCollisions) {
+      const isHorizontal = controller.motion[movementDirection].axis === "x";
+      const delta = velocity;
+      
+      if (isHorizontal) {
+        player.position.x += delta;
+      } else {
+        player.position.y += delta;
+      }
     }
-  };
-
-  moveMobile(player);
+  }
 
   enemyAttackTimer++;
   if (enemyAttackTimer >= ENEMY_ATTACK_COOLDOWN) {
@@ -83,6 +87,7 @@ const motionControl = ({
   const attackChoice = controller.getAttack();
   if (attackChoice !== null && enemies.length > 0) {
     const closestEnemy = enemies.reduce((closest, enemy) => {
+      if (!enemy.alive()) return closest;
       const distToEnemy = Math.abs(enemy.position.x - player.position.x) + Math.abs(enemy.position.y - player.position.y);
       const distToClosest = Math.abs(closest.position.x - player.position.x) + Math.abs(closest.position.y - player.position.y);
       return distToEnemy < distToClosest ? enemy : closest;
@@ -101,20 +106,10 @@ export const animationBuilder = ({
 }: AnimationBuilderArgs): void => {
   const ctx: CanvasRenderingContext2D = getCtx(canvas);
   const colliders = getColliders();
-  let frameCount = 0;
   
   const animate = (): void => {
-    frameCount++;
-    
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    ctx.save();
-    
-    const offsetX = -player.position.x + canvas.width / 2;
-    const offsetY = -player.position.y + canvas.height / 2;
-    
-    ctx.translate(offsetX, offsetY);
     
     bg.draw(ctx);
     enemies.forEach(enemy => {
@@ -124,8 +119,6 @@ export const animationBuilder = ({
     });
     player.draw(ctx);
     fg.draw(ctx);
-    
-    ctx.restore();
     
     drawHUD(ctx, player, canvas);
     
@@ -138,12 +131,12 @@ export const animationBuilder = ({
 const drawHUD = (ctx: CanvasRenderingContext2D, player: Playable, canvas: HTMLCanvasElement) => {
   const hudX = 10;
   const hudY = 10;
-  const barWidth = 150;
+  const barWidth = Math.min(150, canvas.width * 0.3);
   const barHeight = 14;
   const spacing = 6;
 
-  ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-  ctx.fillRect(hudX - 4, hudY - 4, barWidth + 8, barHeight * 2 + spacing + 20);
+  ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+  ctx.fillRect(hudX - 4, hudY - 4, barWidth + 8, barHeight * 2 + spacing + 24);
 
   ctx.fillStyle = "#fff";
   ctx.font = "bold 12px monospace";
@@ -151,7 +144,7 @@ const drawHUD = (ctx: CanvasRenderingContext2D, player: Playable, canvas: HTMLCa
 
   ctx.fillStyle = "#333";
   ctx.fillRect(hudX, hudY + 16, barWidth, barHeight);
-  ctx.fillStyle = "#e74c3c";
+  ctx.fillStyle = player.hp / player.maxHp > 0.3 ? "#e74c3c" : "#ff0000";
   ctx.fillRect(hudX, hudY + 16, barWidth * Math.max(0, player.hp / player.maxHp), barHeight);
 
   ctx.fillStyle = "#fff";
@@ -162,7 +155,16 @@ const drawHUD = (ctx: CanvasRenderingContext2D, player: Playable, canvas: HTMLCa
   ctx.fillStyle = "#3498db";
   ctx.fillRect(hudX, hudY + 42, barWidth * Math.max(0, player.mana / player.maxMana), barHeight);
   
-  ctx.fillStyle = "#fff";
-  ctx.font = "bold 10px monospace";
-  ctx.fillText(`Enemies: ${player.alive() ? '1' : '0'}`, hudX, hudY + 65);
+  if (player.hp <= 0) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#e74c3c";
+    ctx.font = "bold 32px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 16px monospace";
+    ctx.fillText("Restart to play again", canvas.width / 2, canvas.height / 2 + 30);
+    ctx.textAlign = "start";
+  }
 };

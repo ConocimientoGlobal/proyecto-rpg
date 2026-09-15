@@ -1,3 +1,5 @@
+export let CANVAS_SCALE = 1;
+
 export const mapSetup = (
   map_width: number,
   map_height: number
@@ -11,13 +13,13 @@ export const mapSetup = (
   
   const scaleX = screenWidth / map_width;
   const scaleY = screenHeight / map_height;
-  const scale = Math.min(scaleX, scaleY);
+  CANVAS_SCALE = Math.min(scaleX, scaleY);
   
-  canvas.style.width = (map_width * scale) + 'px';
-  canvas.style.height = (map_height * scale) + 'px';
+  canvas.style.width = (map_width * CANVAS_SCALE) + 'px';
+  canvas.style.height = (map_height * CANVAS_SCALE) + 'px';
   canvas.style.position = 'absolute';
-  canvas.style.left = ((screenWidth - map_width * scale) / 2) + 'px';
-  canvas.style.top = ((screenHeight - map_height * scale) / 2) + 'px';
+  canvas.style.left = ((screenWidth - map_width * CANVAS_SCALE) / 2) + 'px';
+  canvas.style.top = ((screenHeight - map_height * CANVAS_SCALE) / 2) + 'px';
   
   const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
   ctx.imageSmoothingEnabled = false;
