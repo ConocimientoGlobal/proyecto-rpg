@@ -1,6 +1,7 @@
 import { Sprite, Playable } from "./sprites";
 import { mapSetup } from "./render/canvas";
 import { configureKeyPress } from "./events/keys";
+import { configureTouchControls } from "./events/touch";
 import { animationBuilder } from "./render/animation";
 import {
   MAP_WIDTH,
@@ -155,6 +156,7 @@ const main = async () => {
   });
   const canvas = mapSetup(MAP_WIDTH, MAP_HEIGHT);
   configureKeyPress(state.controller);
+  configureTouchControls(state.controller);
   animationBuilder({ bg, player, state, canvas, fg, enemies });
 };
 
