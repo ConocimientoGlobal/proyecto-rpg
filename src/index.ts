@@ -114,7 +114,12 @@ const main = async () => {
       attacks: [new SoftGrass(), new CitricHealing(), new ShadowStep(), new PhotonBeam()],
     }
   );
-  const enemyCoords = [{ x: 265, y: 20 }] //, { x: 1500, y: 550 }, { x: 500, y: 500 }];
+  const enemyCoords = [
+    { x: 265, y: 20 },
+    { x: 800, y: 400 },
+    { x: 1200, y: 200 },
+    { x: 500, y: 800 },
+  ];
 
   const enemies = enemyCoords.map(enemyCoords => {
     const enemy = new Playable({

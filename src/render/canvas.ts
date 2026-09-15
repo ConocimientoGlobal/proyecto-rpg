@@ -1,3 +1,5 @@
+export let CANVAS_SCALE = 1;
+
 export const mapSetup = (
   map_width: number,
   map_height: number
@@ -9,13 +11,13 @@ export const mapSetup = (
   const screenWidth = window.innerWidth;
   const screenHeight = window.innerHeight;
   
-  const scale = Math.min(screenWidth / map_width, screenHeight / map_height);
+  CANVAS_SCALE = Math.min(screenWidth / map_width, screenHeight / map_height);
   
-  canvas.style.width = (map_width * scale) + 'px';
-  canvas.style.height = (map_height * scale) + 'px';
+  canvas.style.width = (map_width * CANVAS_SCALE) + 'px';
+  canvas.style.height = (map_height * CANVAS_SCALE) + 'px';
   canvas.style.position = 'absolute';
-  canvas.style.left = ((screenWidth - map_width * scale) / 2) + 'px';
-  canvas.style.top = ((screenHeight - map_height * scale) / 2) + 'px';
+  canvas.style.left = ((screenWidth - map_width * CANVAS_SCALE) / 2) + 'px';
+  canvas.style.top = ((screenHeight - map_height * CANVAS_SCALE) / 2) + 'px';
   
   return canvas;
 };
@@ -23,5 +25,6 @@ export const mapSetup = (
 export const getCtx = (canvas: HTMLCanvasElement): CanvasRenderingContext2D => {
   const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
   ctx.imageSmoothingEnabled = false;
+  ctx.scale(CANVAS_SCALE, CANVAS_SCALE);
   return ctx;
 };
