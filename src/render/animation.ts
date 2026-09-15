@@ -63,6 +63,7 @@ const motionControl = ({
     });
 
     if (!playerCollisions && hasKey(player.position, axis)) {
+      // Player moves through the world (original November logic)
       player.position[axis] += velocity;
     }
   }
@@ -109,19 +110,19 @@ export const animationBuilder = ({
     // Save context and apply camera transform
     ctx.save();
     
-    // Scale to fill 9:16 screen
+    // Scale to fill 9:16 screen (crop sides for 4:3 world)
     const scaleX = canvas.width / MAP_WIDTH;
     const scaleY = canvas.height / MAP_HEIGHT;
     const scale = Math.max(scaleX, scaleY);
     
     ctx.scale(scale, scale);
     
-    // Center the view on the player
+    // Center the view on the player (centered horizontally)
     const offsetX = -player.position.x + (MAP_WIDTH / 2);
     const offsetY = -player.position.y + (MAP_HEIGHT / 2);
     ctx.translate(offsetX, offsetY);
     
-    // Draw game world
+    // Draw game world (bg, enemies, player, fg are already positioned correctly)
     bg.draw(ctx);
     enemies.forEach(enemy => {
       if (enemy.alive()) {
