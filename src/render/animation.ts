@@ -1,5 +1,5 @@
 import { getScale } from "./canvas";
-import { MOVESPEED, MAP_WIDTH, MAP_HEIGHT } from "../constants";
+import { MOVESPEED, MAP_WIDTH, MAP_HEIGHT, VIEW_WIDTH, VIEW_HEIGHT } from "../constants";
 import { getColliders, checkCollision } from "./collider";
 import { BoxCollider } from "./collider";
 import { State } from "../state";
@@ -90,12 +90,12 @@ const motionControl = ({
   }
 
   // Update camera to follow player (center in viewport)
-  const targetCamX = player.position.x - 360;  // VIEW_WIDTH / 2
-  const targetCamY = player.position.y - 640;  // VIEW_HEIGHT / 2
+  const targetCamX = player.position.x - (VIEW_WIDTH / 2);
+  const targetCamY = player.position.y - (VIEW_HEIGHT / 2);
   
   // Clamp camera to map bounds
-  const clampedCamX = Math.max(0, Math.min(targetCamX, MAP_WIDTH - 720));
-  const clampedCamY = Math.max(0, Math.min(targetCamY, MAP_HEIGHT - 1280));
+  const clampedCamX = Math.max(0, Math.min(targetCamX, MAP_WIDTH - VIEW_WIDTH));
+  const clampedCamY = Math.max(0, Math.min(targetCamY, MAP_HEIGHT - VIEW_HEIGHT));
   
   // Smooth lerp
   cameraX += (clampedCamX - cameraX) * 0.1;
@@ -142,8 +142,8 @@ export const animationBuilder = ({
   const colliders = getColliders();
   
   // Initialize camera
-  cameraX = player.position.x - 360;
-  cameraY = player.position.y - 640;
+  cameraX = player.position.x - (VIEW_WIDTH / 2);
+  cameraY = player.position.y - (VIEW_HEIGHT / 2);
   
   const animate = (): void => {
     const scale = getScale();
