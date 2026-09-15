@@ -20,7 +20,7 @@ export const IS_COLLIDER: number = 955;
 export const MOVESPEED: number = 4;
 export const TILES: { rows: number, cols: number } = {
     rows: 40,
-    cols: 30,
+    cols: 30
 }
 
 export const DIRECTIONS = [[-1, 0], [0, -1], [1, 0], [0, 1]];
