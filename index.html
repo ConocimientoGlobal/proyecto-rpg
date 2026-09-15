@@ -594,16 +594,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
       for(let tx=sx;tx<ex;tx++){
         const biome=W[ty][tx];
         const v=V[ty][tx];
-        const px=cx+(tx*T-P.x)*z;
-        const py=cy+(ty*T-P.y)*z;
+        const px=cx+(tx*T-P.cx)*z;
+        const py=cy+(ty*T-P.cy)*z;
         drawTile(biome,v,px,py,ts);
       }
     }
     
     // Dibujar entidades
     for(const e of E){
-      const esx=cx+(e.x-P.x)*z;
-      const esy=cy+(e.y-P.y)*z;
+      const esx=cx+(e.x-P.cx)*z;
+      const esy=cy+(e.y-P.cy)*z;
       if(esx<-50||esx>cv.width+50||esy<-50||esy>cv.height+50)continue;
       
       if(e.t==='a'){
@@ -623,7 +623,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
     const mc=document.getElementById('mc');if(!mc)return;
     const mctx=mc.getContext('2d');
     mctx.fillStyle='#1a1a2e';mctx.fillRect(0,0,40,40);
-    const r=12,ppx=Math.floor(P.x/T),ppy=Math.floor(P.y/T);
+    const r=12,ppx=Math.floor(P.cx/T),ppy=Math.floor(P.cy/T);
     for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
       const wx=ppx+dx,wy=ppy+dy;if(wx<0||wx>=WW||wy<0||wy>=WH)continue;
       const t=W[wy][wx];
