@@ -206,3 +206,44 @@ export class PoisonSting extends Attack {
     return this;
   }
 }
+
+export class ThunderStorm extends Attack {
+  constructor() {
+    super({
+      name: "Thunder Storm",
+      damage: 150,
+      type: "electric",
+      range: 300,
+      cost: 80,
+      accuracy: 0.75,
+      cooldown: 6,
+      description: "Massive lightning damage",
+      effects: [],
+    });
+  }
+
+  activate(user: Playable, target: Playable): ThunderStorm {
+    const damage = (user.magik / target.immunity) * this.damage;
+    target.takeDamage(damage);
+    user.reduceMana(this.cost);
+    return this;
+  }
+
+  render(
+    user: Playable,
+    target: Playable,
+    ctx: CanvasRenderingContext2D
+  ): ThunderStorm {
+    ctx.strokeStyle = "rgba(255, 255, 100, 0.9)";
+    ctx.lineWidth = 5;
+    for (let i = 0; i < 8; i++) {
+      ctx.beginPath();
+      const startX = target.position.x + randomInt(0, target.width);
+      const startY = target.position.y - 50;
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(startX + randomInt(-40, 40), target.position.y + target.height);
+      ctx.stroke();
+    }
+    return this;
+  }
+}
