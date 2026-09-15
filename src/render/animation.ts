@@ -1,5 +1,5 @@
-import { getCtx } from "./canvas";
-import { MOVESPEED, MAP_WIDTH, MAP_HEIGHT } from "../constants";
+import { getScale } from "./canvas";
+import { MOVESPEED, MAP_WIDTH, MAP_HEIGHT, VIEW_WIDTH, VIEW_HEIGHT } from "../constants";
 import { getColliders, checkCollision } from "./collider";
 import { BoxCollider } from "./collider";
 import { State } from "../state";
@@ -25,6 +25,10 @@ type AnimationBuilderArgs = {
 
 const ENEMY_ATTACK_COOLDOWN = 90;
 let enemyAttackTimer = 0;
+
+// Camera that follows the player
+let cameraX = 0;
+let cameraY = 0;
 
 const motionControl = ({
   ctx,
@@ -62,7 +66,7 @@ const motionControl = ({
   if (!movementDirection && futureKeyState.x === 0 && futureKeyState.y === 0) {
     player.animate("idle");
   } else {
-    // Determine animation direction based on input
+    // Determine animation direction
     if (Math.abs(futureKeyState.x) > Math.abs(futureKeyState.y)) {
       player.animate(futureKeyState.x > 0 ? "right" : "left");
     } else if (futureKeyState.y !== 0) {
@@ -76,7 +80,7 @@ const motionControl = ({
       if (enemy.alive()) enemy.follow(player, colliders);
     });
 
-    // Apply movement with collision (move player, not camera)
+    // Apply movement with collision
     if (futureKeyState.x !== 0 && !playerCollisionsX) {
       player.position.x += futureKeyState.x;
     }
@@ -84,6 +88,18 @@ const motionControl = ({
       player.position.y += futureKeyState.y;
     }
   }
+
+  // Update camera to follow player smoothly
+  const targetCamX = player.position.x - (VIEW_WIDTH / 2);
+  const targetCamY = player.position.y - (VIEW_HEIGHT / 2);
+  
+  // Clamp camera to map bounds
+  const clampedCamX = Math.max(0, Math.min(targetCamX, MAP_WIDTH - VIEW_WIDTH));
+  const clampedCamY = Math.max(0, Math.min(targetCamY, MAP_HEIGHT - VIEW_HEIGHT));
+  
+  // Smooth lerp camera
+  cameraX += (clampedCamX - cameraX) * 0.1;
+  cameraY += (clampedCamY - cameraY) * 0.1;
 
   // Enemy attacks with cooldown
   enemyAttackTimer++;
@@ -99,7 +115,7 @@ const motionControl = ({
   // Player regen
   player.regen();
   
-  // Player attacks - find closest enemy in range
+  // Player attacks
   const attackChoice = controller.getAttack();
   if (attackChoice !== null && enemies.length > 0) {
     const aliveEnemies = enemies.filter(e => e.alive());
@@ -122,8 +138,12 @@ export const animationBuilder = ({
   fg,
   enemies,
 }: AnimationBuilderArgs): void => {
-  const ctx: CanvasRenderingContext2D = getCtx(canvas);
+  const ctx = canvas.getContext("2d")!;
   const colliders = getColliders();
+  
+  // Initialize camera position
+  cameraX = player.position.x - (VIEW_WIDTH / 2);
+  cameraY = player.position.y - (VIEW_HEIGHT / 2);
   
   const animate = (): void => {
     // Clear screen
@@ -133,19 +153,17 @@ export const animationBuilder = ({
     // Save context and apply camera transform
     ctx.save();
     
-    // Scale to fill 9:16 screen (crop sides for 4:3 world)
-    const scaleX = canvas.width / MAP_WIDTH;
-    const scaleY = canvas.height / MAP_HEIGHT;
+    // Scale to fill 9:16 screen
+    const scaleX = canvas.width / VIEW_WIDTH;
+    const scaleY = canvas.height / VIEW_HEIGHT;
     const scale = Math.max(scaleX, scaleY);
     
     ctx.scale(scale, scale);
     
-    // Center the view on the player
-    const offsetX = -player.position.x + (MAP_WIDTH / 2);
-    const offsetY = -player.position.y + (MAP_HEIGHT / 2);
-    ctx.translate(offsetX, offsetY);
+    // Translate by camera (centered on player)
+    ctx.translate(-cameraX, -cameraY);
     
-    // Draw game world (bg, enemies, player, fg are already positioned correctly)
+    // Draw game world
     bg.draw(ctx);
     enemies.forEach(enemy => {
       if (enemy.alive()) {
@@ -157,7 +175,7 @@ export const animationBuilder = ({
     
     ctx.restore();
     
-    // Draw HUD (fixed position)
+    // Draw HUD (fixed position, not affected by camera)
     drawHUD(ctx, player, canvas);
     
     window.requestAnimationFrame(animate);
@@ -169,7 +187,7 @@ export const animationBuilder = ({
 const drawHUD = (ctx: CanvasRenderingContext2D, player: Playable, canvas: HTMLCanvasElement) => {
   const hudX = 10;
   const hudY = 10;
-  const barWidth = Math.min(150, canvas.width * 0.3);
+  const barWidth = 150;
   const barHeight = 14;
   const spacing = 6;
 

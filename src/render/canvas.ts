@@ -1,34 +1,34 @@
-export let CANVAS_SCALE = 1;
+import { VIEW_WIDTH, VIEW_HEIGHT } from "../constants";
 
-export const mapSetup = (
-  map_width: number,
-  map_height: number
-): HTMLCanvasElement => {
-  const canvas = <HTMLCanvasElement>document.getElementById("canvas");
-  
-  const screenWidth = window.innerWidth;
-  const screenHeight = window.innerHeight;
-  
-  // Set canvas to fill the entire screen
-  canvas.width = screenWidth;
-  canvas.height = screenHeight;
-  canvas.style.width = screenWidth + 'px';
-  canvas.style.height = screenHeight + 'px';
-  canvas.style.position = 'absolute';
-  canvas.style.left = '0';
-  canvas.style.top = '0';
-  
-  // Calculate scale to cover the screen (crop sides if needed)
-  CANVAS_SCALE = Math.max(screenWidth / map_width, screenHeight / map_height);
-  
-  const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
+let SCALE = 1;
+
+export const mapSetup = () => {
+  const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  const dpr = window.devicePixelRatio || 1;
+  const screenW = window.innerWidth;
+  const screenH = window.innerHeight;
+
+  // Calculate scale to fit the 9:16 viewport into the screen
+  const scaleX = screenW / VIEW_WIDTH;
+  const scaleY = screenH / VIEW_HEIGHT;
+  SCALE = Math.min(scaleX, scaleY);
+
+  // Set canvas size (CSS pixels)
+  canvas.style.width = screenW + "px";
+  canvas.style.height = screenH + "px";
+  canvas.style.position = "absolute";
+  canvas.style.left = "0";
+  canvas.style.top = "0";
+
+  // Set canvas resolution (device pixels)
+  canvas.width = Math.floor(screenW * dpr);
+  canvas.height = Math.floor(screenH * dpr);
+
+  const ctx = canvas.getContext("2d")!;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.imageSmoothingEnabled = false;
-  
+
   return canvas;
 };
 
-export const getCtx = (canvas: HTMLCanvasElement): CanvasRenderingContext2D => {
-  const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
-  ctx.imageSmoothingEnabled = false;
-  return ctx;
-};
+export const getScale = () => SCALE;

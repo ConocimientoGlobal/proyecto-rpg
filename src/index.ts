@@ -167,7 +167,7 @@ const main = async () => {
       attacks: ["y", "u", "i", "o"],
     },
   });
-  const canvas = mapSetup(MAP_WIDTH, MAP_HEIGHT);
+  const canvas = mapSetup();
   configureKeyPress(state.controller);
   configureTouchControls(state.controller);
   
