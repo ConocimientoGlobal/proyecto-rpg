@@ -3,258 +3,315 @@
 <head>
 <meta charset="utf-8">
 <title>PachaMirai</title>
-<style>
-*{margin:0;padding:0;touch-action:none;user-select:none;image-rendering:pixelated}
-html,body{width:100%;height:100%;overflow:hidden;background:#0a0a1a;font-family:monospace}
-canvas{display:block;width:100%;height:100%}
-#ui{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10}
-#ui>div{pointer-events:auto}
-
-/* HUD Pixel Art Style */
-#hud-top{
-  position:absolute;top:0;left:0;right:0;height:44px;
-  background:#1a1a2e;
-  border-bottom:3px solid #4a4a6a;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 10px;color:#e0e0ff;font-size:11px;
-}
-.hud-group{display:flex;align-items:center;gap:10px}
-.stat{display:flex;flex-direction:column;gap:2px}
-.stat-label{font-size:9px;color:#a0a0d0;text-shadow:1px 1px 0 #000}
-.bar-bg{width:70px;height:8px;background:#0a0a1a;border:2px solid #4a4a6a;overflow:hidden}
-.bar-fill{height:100%;transition:width 0.3s}
-#hp-fill{background:linear-gradient(180deg,#ff4444,#cc2222)}
-#mp-fill{background:linear-gradient(180deg,#4488ff,#2244cc)}
-#xp-fill{background:linear-gradient(180deg,#ffdd44,#cc9900)}
-
-#minimap{
-  width:50px;height:50px;
-  background:#0a0a1a;
-  border:3px solid #4a4a6a;
-  border-top-color:#6a6a8a;border-left-color:#6a6a8a;
-  border-bottom-color:#2a2a4a;border-right-color:#2a2a4a;
-  overflow:hidden;position:relative;
-}
-#minimap canvas{width:100%;height:100%}
-
-/* Hotbar */
-#hotbar{
-  position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
-  display:flex;gap:3px;
-  background:#1a1a2e;padding:5px;
-  border:3px solid #4a4a6a;
-  border-top-color:#6a6a8a;border-left-color:#6a6a8a;
-  border-bottom-color:#2a2a4a;border-right-color:#2a2a4a;
-}
-.slot{
-  width:40px;height:40px;
-  background:#2a2a4a;
-  border:3px solid #4a4a6a;
-  border-top-color:#6a6a8a;border-left-color:#6a6a8a;
-  border-bottom-color:#1a1a2e;border-right-color:#1a1a2e;
-  display:flex;align-items:center;justify-content:center;
-  font-size:16px;color:#fff;position:relative;
-}
-.slot:active,.slot.active{
-  background:#3a3a5a;
-  border-top-color:#1a1a2e;border-left-color:#1a1a2e;
-  border-bottom-color:#6a6a8a;border-right-color:#6a6a8a;
-}
-.slot .count{
-  position:absolute;bottom:0;right:2px;font-size:8px;
-  color:#ffcc00;font-weight:bold;text-shadow:1px 1px 0 #000;
-}
-
-/* Controls */
-#joystick{
-  position:absolute;bottom:70px;left:40px;
-  width:120px;height:120px;
-  background:#2a2a4a;
-  border:4px solid #4a4a6a;
-  border-top-color:#6a6a8a;border-left-color:#6a6a8a;
-  border-bottom-color:#1a1a2e;border-right-color:#1a1a2e;
-  border-radius:50%;touch-action:none;
-}
-#joy-knob{
-  position:absolute;top:50%;left:50%;
-  width:50px;height:50px;
-  background:#5a5a8a;
-  border:3px solid #8a8abd;
-  border-top-color:#aacbff;border-left-color:#aacbff;
-  border-bottom-color:#3a3a6a;border-right-color:#3a3a6a;
-  border-radius:50%;transform:translate(-50%,-50%);
-  pointer-events:none;
-}
-
-#action-btns{
-  position:absolute;bottom:70px;right:40px;
-  display:flex;flex-direction:column;gap:12px;
-}
-.abtn{
-  width:56px;height:56px;border-radius:50%;
-  background:#2a2a4a;
-  border:4px solid #4a4a6a;
-  border-top-color:#6a6a8a;border-left-color:#6a6a8a;
-  border-bottom-color:#1a1a2e;border-right-color:#1a1a2e;
-  display:flex;align-items:center;justify-content:center;
-  font-size:24px;color:#fff;touch-action:none;
-}
-.abtn:active{
-  background:#3a3a5a;
-  border-top-color:#1a1a2e;border-left-color:#1a1a2e;
-  border-bottom-color:#6a6a8a;border-right-color:#6a6a8a;
-}
-
-/* Dialogue */
-#dialogue{
-  display:none;position:absolute;bottom:140px;left:50%;
-  transform:translateX(-50%);
-  background:#1a1a2e;color:#e0e0ff;
-  padding:12px 20px;
-  border:3px solid #4a4a6a;
-  border-top-color:#6a6a8a;border-left-color:#6a6a8a;
-  border-bottom-color:#0a0a1a;border-right-color:#0a0a1a;
-  font-size:13px;max-width:85%;text-align:center;
-  text-shadow:1px 1px 0 #000;
-  box-shadow:4px 4px 0 #0a0a1a;
-}
-
-/* Menu */
-#menu{
-  display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(5,5,20,0.96);z-index:100;
-  align-items:center;justify-content:center;flex-direction:column;gap:14px;
-}
-.mbtn{
-  width:200px;padding:12px;
-  background:#2a2a4a;
-  border:3px solid #4a4a6a;
-  border-top-color:#6a6a8a;border-left-color:#6a6a8a;
-  border-bottom-color:#1a1a2e;border-right-color:#1a1a2e;
-  color:#e0e0ff;font-size:16px;text-align:center;font-family:inherit;
-  text-shadow:1px 1px 0 #000;
-}
-.mbtn:active{
-  background:#3a3a5a;
-  border-top-color:#1a1a2e;border-left-color:#1a1a2e;
-  border-bottom-color:#6a6a8a;border-right-color:#6a6a8a;
-}
-
-/* Inventory */
-#inventory{
-  display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(5,5,20,0.96);z-index:100;
-  align-items:center;justify-content:center;flex-direction:column;gap:14px;
-}
-#inv-grid{
-  display:grid;grid-template-columns:repeat(5,48px);gap:4px;
-  background:#1a1a2e;padding:10px;
-  border:3px solid #4a4a6a;
-  border-top-color:#6a6a8a;border-left-color:#6a6a8a;
-  border-bottom-color:#0a0a1a;border-right-color:#0a0a1a;
-}
-.inv-slot{
-  width:48px;height:48px;
-  background:#2a2a4a;
-  border:3px solid #4a4a6a;
-  border-top-color:#6a6a8a;border-left-color:#6a6a8a;
-  border-bottom-color:#1a1a2e;border-right-color:#1a1a2e;
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;position:relative;
-}
-.inv-slot .count{
-  position:absolute;bottom:0;right:2px;font-size:9px;color:#fc0;
-  text-shadow:1px 1px 0 #000;font-weight:bold;
-}
-#inv-close{
-  width:140px;padding:10px;
-  background:#2a2a4a;color:#e0e0ff;
-  border:3px solid #4a4a6a;
-  border-top-color:#6a6a8a;border-left-color:#6a6a8a;
-  border-bottom-color:#1a1a2e;border-right-color:#1a1a2e;
-  font-size:14px;text-align:center;font-family:inherit;
-}
-
-/* Floating messages */
-.float-msg{
-  position:absolute;font-size:12px;color:#ffcc00;
-  pointer-events:none;text-shadow:2px 2px 0 #000;
-  animation:floatUp 1.5s forwards;
-  font-weight:bold;
-}
-@keyframes floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-40px)}}
-</style>
 </head>
-<body>
-<canvas id="c"></canvas>
+<body style="margin:0;padding:0;overflow:hidden;background:#1a3a1a;font-family:monospace">
+<canvas id="c" style="display:block;position:fixed;top:0;left:0;width:100vw;height:100vh"></canvas>
 
-<div id="ui">
-  <!-- HUD Superior -->
-  <div id="hud-top">
-    <div class="hud-group">
-      <div class="stat">
-        <span class="stat-label">HP <span id="hp-txt">100/100</span></span>
-        <div class="bar-bg"><div class="bar-fill" id="hp-fill" style="width:100%"></div></div>
-      </div>
-      <div class="stat">
-        <span class="stat-label">MP <span id="mp-txt">50/50</span></span>
-        <div class="bar-bg"><div class="bar-fill" id="mp-fill" style="width:100%"></div></div>
-      </div>
-      <div class="stat">
-        <span class="stat-label">XP <span id="xp-txt">0/50</span></span>
-        <div class="bar-bg"><div class="bar-fill" id="xp-fill" style="width:0%"></div></div>
-      </div>
-    </div>
-    <div class="hud-group">
-      <div style="text-align:center">
-        <div style="color:#ffcc00;text-shadow:1px 1px 0 #000" id="lvl-display">Nv 1</div>
-        <div style="color:#ffcc00;text-shadow:1px 1px 0 #000" id="gold-display">🪙 50</div>
-      </div>
-      <div id="minimap"><canvas id="mc" width="50" height="50"></canvas></div>
-    </div>
+<div id="ui" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:10">
+  <div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.85);border:2px solid #4a90d9;border-radius:8px;padding:8px 14px;color:#fff;min-width:120px;font-size:10px;pointer-events:auto">
+    <div>HP <span id="hp-txt">100/100</span></div>
+    <div>MP <span id="mp-txt">50/50</span></div>
+    <div>XP <span id="xp-txt">0/50</span></div>
+    <div id="lvl-row" style="margin-top:4px;color:#ffcc00">⭐ Nivel 1</div>
+    <div id="gold-row" style="color:#ffcc00">🪙 50</div>
   </div>
-
-  <!-- Hotbar -->
-  <div id="hotbar">
-    <div class="slot active" data-slot="0">⚔️</div>
-    <div class="slot" data-slot="1">🪓</div>
-    <div class="slot" data-slot="2">⛏️</div>
-    <div class="slot" data-slot="3">🌱</div>
-    <div class="slot" data-slot="4">🪵<span class="count" id="inv-wood">0</span></div>
-    <div class="slot" data-slot="5">🪨<span class="count" id="inv-stone">0</span></div>
-    <div class="slot" data-slot="6">🧪<span class="count" id="inv-potion">3</span></div>
-    <div class="slot" data-slot="7">🍎<span class="count" id="inv-apple">0</span></div>
+  
+  <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.85);border:2px solid #4a90d9;border-radius:50%;width:50px;height:50px;overflow:hidden;pointer-events:auto">
+    <canvas id="mc" width="50" height="50" style="width:100%;height:100%"></canvas>
   </div>
-
-  <!-- Joystick -->
-  <div id="joystick"><div id="joy-knob"></div></div>
-
-  <!-- Action Buttons -->
-  <div id="action-btns">
-    <div class="abtn" id="btn-atk">⚔️</div>
-    <div class="abtn" id="btn-act">✋</div>
-    <div class="abtn" id="btn-inv">🎒</div>
+  
+  <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:2px;background:rgba(0,0,0,0.8);padding:4px;border-radius:6px;border:1px solid #4a90d9;pointer-events:auto">
+    <div class="slot active" style="width:32px;height:32px;border:1px solid #4a90d9;border-radius:4px;background:rgba(50,50,50,0.8);display:flex;align-items:center;justify-content:center;font-size:14px">⚔️</div>
+    <div class="slot" style="width:32px;height:32px;border:1px solid #4a90d9;border-radius:4px;background:rgba(50,50,50,0.8);display:flex;align-items:center;justify-content:center;font-size:14px">✋</div>
+    <div class="slot" style="width:32px;height:32px;border:1px solid #4a90d9;border-radius:4px;background:rgba(50,50,50,0.8);display:flex;align-items:center;justify-content:center;font-size:14px">🎒</div>
   </div>
 </div>
 
-<!-- Dialogue -->
-<div id="dialogue"></div>
-
-<!-- Menu -->
-<div id="menu">
-  <div style="font-size:24px;color:#ffcc00;margin-bottom:10px;text-shadow:2px 2px 0 #000">PachaMirai</div>
-  <button class="mbtn" id="m-resume">▶️ Resumir</button>
-  <button class="mbtn" id="m-save">💾 Guardar</button>
-  <button class="mbtn" id="m-load">📂 Cargar</button>
+<div id="joy" style="position:absolute;bottom:60px;left:50px;width:100px;height:100px;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);border-radius:50%;z-index:20">
+  <div id="jk" style="position:absolute;top:50%;left:50%;width:40px;height:40px;background:rgba(255,255,255,0.4);border-radius:50%;transform:translate(-50%,-50%)"></div>
 </div>
 
-<!-- Inventory -->
-<div id="inventory">
-  <div style="font-size:18px;color:#ffcc00;margin-bottom:10px;text-shadow:1px 1px 0 #000">INVENTARIO</div>
-  <div id="inv-grid"></div>
-  <button id="inv-close">Cerrar</button>
+<div style="position:absolute;bottom:60px;right:50px;display:flex;flex-direction:column;gap:10px;z-index:20">
+  <button id="btn-atk" style="width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);color:#fff;font-size:20px;cursor:pointer">⚔️</button>
+  <button id="btn-act" style="width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);color:#fff;font-size:20px;cursor:pointer">✋</button>
 </div>
 
-<script src="game.js"></script>
+<div id="dlg" style="display:none;position:absolute;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:#fff;padding:10px 16px;border-radius:6px;font-size:12px;z-index:30"></div>
+
+<script>
+(function(){
+  'use strict';
+  
+  const T=32,WW=40,WH=40;
+  const cv=document.getElementById('c');
+  const ctx=cv.getContext('2d');
+  
+  function resize(){
+    cv.width=window.innerWidth;
+    cv.height=window.innerHeight;
+    ctx.imageSmoothingEnabled=false;
+  }
+  window.addEventListener('resize',resize);
+  resize();
+  
+  function h(x,y){return ((x*374761393+y*668265263)^0x5bf03635)&0x7fffffff}
+  
+  // Mundo
+  const world=[];
+  for(let y=0;y<WH;y++){
+    world[y]=[];
+    for(let x=0;x<WW;x++){
+      const v=h(x,y),r=(v%1000)/1000;
+      let b=0;
+      if(r<0.12)b=2;else if(r<0.22)b=3;else if(r<0.4)b=6;
+      else if(r<0.6)b=0;else if(r<0.75)b=1;else if(r<0.85)b=4;else b=5;
+      world[y][x]=b;
+    }
+  }
+  
+  // Suavizar
+  for(let i=0;i<3;i++){
+    const n=world.map(r=>[...r]);
+    for(let y=1;y<WH-1;y++)for(let x=1;x<WW-1;x++){
+      const c={};
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+        const b=world[y+dy][x+dx];c[b]=(c[b]||0)+1;
+      }
+      let mb=0,mc=0;
+      for(const b in c)if(c[b]>mc){mc=c[b];mb=b}
+      if(mc>=5)n[y][x]=mb;
+    }
+    for(let y=0;y<WH;y++)for(let x=0;x<WW;x++)world[y][x]=n[y][x];
+  }
+  
+  // Entidades
+  const entities=[];
+  const at=['deer','boar','rabbit','fox','wolf','bird','cow','sheep','pig','dog','cat','chicken','fish'];
+  for(let i=0;i<14;i++){
+    entities.push({t:'a',a:at[i],x:10+(h(i,100)%20)*T,y:10+(h(i,200)%20)*T,vx:0,vy:0,f:0,ft:0,hp:3,sp:80+Math.random()*40});
+  }
+  entities.push({t:'n',n:'Viejo',x:20*T,y:18*T,d:['Bienvenido a PachaMirai','Explora con cuidado','Cuida la naturaleza']});
+  entities.push({t:'n',n:'Guarda',x:30*T,y:28*T,d:['Los animales son inocentes','Usa el habla antes del acero']});
+  
+  // Jugador
+  const P={x:WW*T/2,y:WH*T/2,vx:0,vy:0,dir:0,f:0,ft:0,st:'idle',atk:0,hp:100,mhp:100,mp:50,mmp:50,xp:0,lv:1,g:50};
+  
+  // Joystick
+  let jx=0,jy=0;
+  const joy=document.getElementById('joy');
+  const knob=document.getElementById('jk');
+  let active=false,cx=0,cy=0;
+  
+  joy.addEventListener('touchstart',function(e){
+    e.preventDefault();
+    active=true;
+    const r=joy.getBoundingClientRect();
+    cx=r.left+r.width/2;cy=r.top+r.height/2;
+    move(e.touches[0]);
+  },{passive:false});
+  
+  joy.addEventListener('touchmove',function(e){
+    e.preventDefault();
+    if(!active)return;
+    move(e.touches[0]);
+  },{passive:false});
+  
+  joy.addEventListener('touchend',function(e){
+    e.preventDefault();
+    active=false;jx=0;jy=0;
+    knob.style.transform='translate(-50%,-50%)';
+  });
+  
+  function move(e){
+    const dx=e.clientX-cx,dy=e.clientY-cy;
+    const d=Math.min(Math.sqrt(dx*dx+dy*dy),30);
+    const a=Math.atan2(dy,dx);
+    knob.style.transform='translate(calc(-50% + '+Math.cos(a)*d+'px), calc(-50% + '+Math.sin(a)*d+'px))';
+    jx=d>5?Math.cos(a)*d/30:0;
+    jy=d>5?Math.sin(a)*d/30:0;
+  }
+  
+  // Botones
+  document.getElementById('btn-atk').onclick=function(){
+    if(P.atk>0)return;
+    P.atk=0.4;P.st='attack';
+    for(let i=entities.length-1;i>=0;i--){
+      const e=entities[i];
+      if(e.t!=='a')continue;
+      if(Math.hypot(e.x-P.x,e.y-P.y)<40){
+        e.hp--;
+        if(e.hp<=0){P.xp+=10;entities.splice(i,1);dlg('+10 XP');}
+      }
+    }
+  };
+  
+  document.getElementById('btn-act').onclick=function(){
+    for(const e of entities){
+      if(e.t==='n'&&Math.hypot(e.x-P.x,e.y-P.y)<50){
+        dlg(e.n+': '+e.d[Math.floor(Math.random()*e.d.length)]);
+        return;
+      }
+    }
+  };
+  
+  function dlg(t){
+    const d=document.getElementById('dlg');
+    d.textContent=t;d.style.display='block';
+    setTimeout(()=>d.style.display='none',2000);
+  }
+  
+  // Render
+  function render(){
+    ctx.fillStyle='#1a3a1a';
+    ctx.fillRect(0,0,cv.width,cv.height);
+    
+    const z=2;
+    const tileSize=T*z;
+    const offsetX=P.x*z-cv.width/2;
+    const offsetY=P.y*z-cv.height/2;
+    
+    const startX=Math.max(0,Math.floor(offsetX/T));
+    const startY=Math.max(0,Math.floor(offsetY/T));
+    const endX=Math.min(WW,Math.ceil((offsetX+cv.width)/T)+1);
+    const endY=Math.min(WH,Math.ceil((offsetY+cv.height)/T)+1);
+    
+    for(let ty=startY;ty<endY;ty++){
+      for(let tx=startX;tx<endX;tx++){
+        const t=world[ty][tx];
+        const cs=['#3a6b2a','#5d4037','#0d47a1','#f9a825','#616161','#e0e0e0','#2d5a2d'];
+        ctx.fillStyle=cs[t]||'#f0f';
+        ctx.fillRect(tx*tileSize-offsetX,ty*tileSize-offsetY,tileSize+1,tileSize+1);
+        
+        if(t===0){
+          ctx.fillStyle='#5a9a3a';
+          ctx.fillRect(tx*tileSize-offsetX+4,ty*tileSize-offsetY+28,3,6);
+          ctx.fillRect(tx*tileSize-offsetX+14,ty*tileSize-offsetY+27,3,7);
+        }
+        if(t===2){
+          ctx.fillStyle='rgba(66,165,245,0.4)';
+          ctx.fillRect(tx*tileSize-offsetX+4,ty*tileSize-offsetY+10,10,2);
+        }
+        if(t===6){
+          ctx.fillStyle='#4e342e';
+          ctx.fillRect(tx*tileSize-offsetX+11,ty*tileSize-offsetY+14,10,18);
+          ctx.fillStyle='#1b5e20';
+          ctx.beginPath();
+          ctx.arc(tx*tileSize-offsetX+16,ty*tileSize-offsetY+10,10,0,Math.PI*2);
+          ctx.fill();
+          ctx.fillStyle='#2e7d32';
+          ctx.beginPath();
+          ctx.arc(tx*tileSize-offsetX+15,ty*tileSize-offsetY+8,7,0,Math.PI*2);
+          ctx.fill();
+        }
+      }
+    }
+    
+    // Animales
+    const AC={deer:[160,120,80],boar:[80,60,40],rabbit:[240,240,240],fox:[200,80,20],wolf:[80,80,80],bird:[40,100,200],cow:[250,250,250],sheep:[250,250,240],pig:[250,180,180],horse:[120,80,60],dog:[250,250,240],cat:[200,100,50],chicken:[250,250,240],fish:[100,180,255]};
+    for(const e of entities){
+      const sx=e.x*z-offsetX,sy=e.y*z-offsetY;
+      if(sx<-T||sx>cv.width+T||sy<-T||sy>cv.height+T)continue;
+      
+      if(e.t==='a'){
+        const c=AC[e.a]||[150,150,150];
+        ctx.fillStyle='rgb('+c[0]+','+c[1]+','+c[2]+')';
+        ctx.beginPath();ctx.ellipse(sx+16,sy+18,10,6,0,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.ellipse(sx+24,sy+10,6,5,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#212121';ctx.fillRect(sx+26,sy+9,2,2);
+      } else {
+        ctx.fillStyle='#795548';ctx.fillRect(sx+6,sy+2,20,10);ctx.fillRect(sx+10,sy,12,4);
+        ctx.fillStyle='#ffccbc';ctx.fillRect(sx+8,sy+10,16,10);
+        ctx.fillStyle='#1565c0';ctx.fillRect(sx+6,sy+18,20,12);
+        ctx.fillStyle='#fc0';ctx.font='8px monospace';ctx.textAlign='center';ctx.fillText(e.n,sx+16,sy-4);
+      }
+    }
+    
+    // Jugador
+    const px=cv.width/2,py=cv.height/2;
+    const bob=P.st==='walk'?[0,-2,0,2][P.f]:0;
+    const leg=P.st==='walk'?[0,3,0,-3][P.f]:0;
+    const pcx=px+16,pcy=py+16+bob;
+    
+    ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(pcx,pcy+14,10,3,0,0,Math.PI*2).fill();
+    ctx.fillStyle='#5d4037';ctx.fillRect(pcx-4,pcy+4,3,12+leg);ctx.fillRect(pcx+1,pcy+4,3,12-leg);
+    ctx.fillStyle='#3e2723';ctx.fillRect(pcx-4,pcy+14+leg,3,3);ctx.fillRect(pcx+1,pcy+14-leg,3,3);
+    ctx.fillStyle='#1565c0';ctx.fillRect(pcx-7,pcy-6,14,12);ctx.fillStyle='#1976d2';ctx.fillRect(pcx-6,pcy-5,12,10);
+    ctx.fillStyle='#ffccbc';ctx.fillRect(pcx-5,pcy-16,10,12);ctx.fillStyle='#ffe0b2';ctx.fillRect(pcx-4,pcy-14,8,6);
+    ctx.fillStyle='#3e2723';ctx.fillRect(pcx-6,pcy-18,12,4);
+    if(P.dir!==3){ctx.fillStyle='#fff';ctx.fillRect(pcx-3,pcy-12,3,3);ctx.fillRect(pcx+2,pcy-12,3,3);ctx.fillStyle='#1a1a1a';ctx.fillRect(pcx-2,pcy-11,2,2);ctx.fillRect(pcx+3,pcy-11,2,2)}
+    if(P.st==='attack'&&P.f<2){ctx.fillStyle='#b0bec5';ctx.fillRect(pcx+9,pcy-8,3,14);ctx.fillStyle='#ffc107';ctx.fillRect(pcx+7,pcy+4,7,3)}
+  }
+  
+  // Minimap
+  function renderMM(){
+    const mc=document.getElementById('mc');if(!mc)return;
+    const mctx=mc.getContext('2d');
+    mctx.fillStyle='#1a3a1a';mctx.fillRect(0,0,50,50);
+    const r=15,ppx=Math.floor(P.x/T),ppy=Math.floor(P.y/T);
+    for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+      const wx=ppx+dx,wy=ppy+dy;if(wx<0||wx>=WW||wy<0||wy>=WH)continue;
+      const t=world[wy][wx];
+      mctx.fillStyle=t===0?'#4caf50':t===1?'#8d6e63':t===2?'#0288d1':t===3?'#f9a825':t===4?'#757575':t===5?'#fff':'#1b5e20';
+      mctx.fillRect(25+dx*1.5,25+dy*1.5,1.5,1.5);
+    }
+    mctx.fillStyle='#fff';mctx.fillRect(24,24,2,2);
+    mctx.fillStyle='#fc0';
+    for(const e of entities)if(e.t==='n'){
+      const nx=25+Math.floor((e.x/T-ppx)*1.5),ny=25+Math.floor((e.y/T-ppy)*1.5);
+      if(nx>0&&nx<50&&ny>0&&ny<50)mctx.fillRect(nx-1,ny-1,3,3);
+    }
+  }
+  
+  // Update
+  function update(dt){
+    const sp=180;
+    P.vx=jx*sp;P.vy=jy*sp;
+    P.x+=P.vx*dt;P.y+=P.vy*dt;
+    P.x=Math.max(T,Math.min(WW*T-T,P.x));
+    P.y=Math.max(T,Math.min(WH*T-T,P.y));
+    
+    if(Math.abs(jx)>Math.abs(jy))P.dir=jx>0?2:1;
+    else if(jy!==0)P.dir=jy>0?0:3;
+    
+    if(P.atk>0){P.st='attack';P.atk-=dt}
+    else if(Math.abs(P.vx)>1||Math.abs(P.vy)>1)P.st='walk';
+    else P.st='idle';
+    P.ft+=dt;if(P.ft>0.2){P.ft=0;P.f=(P.f+1)%4}
+    
+    // Animales
+    for(const e of entities){
+      if(e.t!=='a')continue;
+      const dx=P.x-e.x,dy=P.y-e.y,d=Math.hypot(dx,dy);
+      if(d<80&&d>0){e.vx=-dx/d*120;e.vy=-dy/d*120}
+      else if(d>200){e.vx=(Math.random()-0.5)*40;e.vy=(Math.random()-0.5)*40}
+      else{e.vx*=0.95;e.vy*=0.95}
+      e.x+=e.vx*dt;e.y+=e.vy*dt;
+      e.x=Math.max(T,Math.min(WW*T-T,e.x));
+      e.y=Math.max(T,Math.min(WH*T-T,e.y));
+    }
+    
+    if(P.xp>=P.lv*50){P.xp-=P.lv*50;P.lv++;P.mhp+=10;P.hp=P.mhp;dlg('NIVEL '+P.lv+'!')}
+    
+    document.getElementById('hp-txt').textContent=P.hp+'/'+P.mhp;
+    document.getElementById('mp-txt').textContent=P.mp+'/'+P.mmp;
+    document.getElementById('xp-txt').textContent=P.xp+'/'+(P.lv*50);
+    document.getElementById('lvl-row').textContent='⭐ Nivel '+P.lv;
+    document.getElementById('gold-row').textContent='🪙 '+P.g;
+  }
+  
+  let last=0;
+  function loop(ts){
+    const dt=Math.min((ts-last)/1000,0.1);
+    last=ts;
+    update(dt);
+    render();
+    renderMM();
+    requestAnimationFrame(loop);
+  }
+  
+  last=performance.now();
+  requestAnimationFrame(loop);
+})();
+</script>
 </body>
 </html>
