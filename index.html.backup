@@ -66,7 +66,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
 (function(){
   'use strict';
   
-  const T=32,WW=32,WH=32;
+  const T=32,WW=48,WH=48;
   const cv=document.getElementById('c'),ctx=cv.getContext('2d');
   
   function resize(){
@@ -265,7 +265,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
     }
     
     // Borde sutil para definir tiles
-    ctx.strokeStyle='rgba(0,0,0,0.0)';
+    ctx.strokeStyle='rgba(0,0,0,0.1)';
     ctx.strokeRect(px,py,size,size);
   }
   
@@ -576,7 +576,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
   // =============================================
   function render(){
     const w=cv.width,h=cv.height;
-    const z=2,ts=T*z;
+    const z=1.5,ts=T*z;
     const cx=w/2,cy=h/2;
     
     // Fondo
@@ -586,8 +586,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
     // Calcular rango de tiles visibles
     const sx=Math.max(0,Math.floor(P.x/T)-Math.ceil(w/ts/2)-2);
     const sy=Math.max(0,Math.floor(P.y/T)-Math.ceil(h/ts/2)-2);
-    const ex=Math.min(WW,Math.ceil(P.x/T)+Math.ceil(w/ts/2)+4);
-    const ey=Math.min(WH,Math.ceil(P.y/T)+Math.ceil(h/ts/2)+4);
+    const ex=Math.min(WW,Math.ceil(P.x/T)+Math.ceil(w/ts/2)+2);
+    const ey=Math.min(WH,Math.ceil(P.y/T)+Math.ceil(h/ts/2)+2);
     
     // Dibujar tiles
     for(let ty=sy;ty<ey;ty++){
@@ -637,7 +637,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
   
   // Update
   function update(dt){
-    const sp=80;
+    const sp=150;
     P.vx=jx*sp;P.vy=jy*sp;
     P.x+=P.vx*dt;P.y+=P.vy*dt;
     P.x=Math.max(T,Math.min(WW*T-T,P.x));
@@ -650,12 +650,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:mon
     else if(Math.abs(P.vx)>1||Math.abs(P.vy)>1)P.st='walk';
     else P.st='idle';
     
-    P.ft+=dt;if(P.ft>0.4){P.ft=0;P.f=(P.f+1)%4}
+    P.ft+=dt;if(P.ft>0.2){P.ft=0;P.f=(P.f+1)%4}
     
     for(const e of E){
       if(e.t!=='a')continue;
       const dx=P.x-e.x,dy=P.y-e.y,d=Math.hypot(dx,dy);
-      if(d<80&&d>0){e.vx=-dx/d*60;e.vy=-dy/d*120}
+      if(d<80&&d>0){e.vx=-dx/d*120;e.vy=-dy/d*120}
       else if(d>200){e.vx=(Math.random()-0.5)*40;e.vy=(Math.random()-0.5)*40}
       else{e.vx*=0.95;e.vy*=0.95}
       e.x+=e.vx*dt;e.y+=e.vy*dt;
