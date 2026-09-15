@@ -1,5 +1,5 @@
 import { getCtx } from "./canvas";
-import { MOVESPEED } from "../constants";
+import { MOVESPEED, MAP_WIDTH, MAP_HEIGHT } from "../constants";
 import { getColliders, checkCollision } from "./collider";
 import { BoxCollider } from "./collider";
 import { State } from "../state";
@@ -110,15 +110,15 @@ export const animationBuilder = ({
     ctx.save();
     
     // Scale to fill 9:16 screen
-    const scaleX = canvas.width / 1920;
-    const scaleY = canvas.height / 1440;
+    const scaleX = canvas.width / MAP_WIDTH;
+    const scaleY = canvas.height / MAP_HEIGHT;
     const scale = Math.max(scaleX, scaleY);
     
     ctx.scale(scale, scale);
     
     // Center the view on the player
-    const offsetX = -player.position.x + (1920 / 2);
-    const offsetY = -player.position.y + (1440 / 2);
+    const offsetX = -player.position.x + (MAP_WIDTH / 2);
+    const offsetY = -player.position.y + (MAP_HEIGHT / 2);
     ctx.translate(offsetX, offsetY);
     
     // Draw game world
