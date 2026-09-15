@@ -13,25 +13,18 @@ export const configureTouchControls = (controller: Controller) => {
     const attackButtons = document.createElement('div');
     attackButtons.id = 'attack-buttons';
 
-    const attackConfigs = [
-        { key: 'y', label: '🔥', color: 'rgba(255, 100, 0, 0.5)' },
-        { key: 'u', label: '❄️', color: 'rgba(100, 200, 255, 0.5)' },
-        { key: 'i', label: '💚', color: 'rgba(100, 255, 100, 0.5)' },
-        { key: 'o', label: '⚡', color: 'rgba(255, 255, 0, 0.5)' },
-    ];
-
-    attackConfigs.forEach(cfg => {
+    const attackKeys = ['y', 'u', 'i', 'o'];
+    attackKeys.forEach(key => {
         const btn = document.createElement('button');
         btn.className = 'attack-btn';
-        btn.textContent = cfg.label;
-        btn.style.background = cfg.color;
+        btn.textContent = key.toUpperCase();
         btn.addEventListener('touchstart', e => {
             e.preventDefault();
-            controller.press(cfg.key);
+            controller.press(key);
         });
         btn.addEventListener('touchend', e => {
             e.preventDefault();
-            controller.release(cfg.key);
+            controller.release(key);
         });
         attackButtons.appendChild(btn);
     });
@@ -71,7 +64,7 @@ export const configureTouchControls = (controller: Controller) => {
         const dx = clientX - joystickCenterX;
         const dy = clientY - joystickCenterY;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        const maxDistance = Math.min(joystickZone.getBoundingClientRect().width / 2.5, 50);
+        const maxDistance = 50;
 
         const clampedDistance = Math.min(distance, maxDistance);
         const angle = Math.atan2(dy, dx);
@@ -82,7 +75,7 @@ export const configureTouchControls = (controller: Controller) => {
 
         releaseAllDirections();
 
-        const threshold = maxDistance * 0.4;
+        const threshold = 15;
         if (distance > threshold) {
             if (Math.abs(dx) > Math.abs(dy)) {
                 controller.press(dx > 0 ? 'd' : 'a');
