@@ -160,86 +160,99 @@
     setTimeout(()=>d.style.display='none',2000);
   }
   
-  // Render
+  // Render - cámara simple centrada en el jugador
   function render(){
     ctx.fillStyle='#1a3a1a';
     ctx.fillRect(0,0,cv.width,cv.height);
     
-    const z=2;
-    const tileSize=T*z;
-    const offsetX=P.x*z-cv.width/2;
-    const offsetY=P.y*z-cv.height/2;
+    const z=2; // zoom
+    const ts=T*z; // tamaño tile en pantalla
+    const cw=cv.width;
+    const ch=cv.height;
     
-    const startX=Math.max(0,Math.floor(offsetX/T));
-    const startY=Math.max(0,Math.floor(offsetY/T));
-    const endX=Math.min(WW,Math.ceil((offsetX+cv.width)/T)+1);
-    const endY=Math.min(WH,Math.ceil((offsetY+cv.height)/T)+1);
+    // Centro de la pantalla
+    const centerX=cw/2;
+    const centerY=ch/2;
     
-    for(let ty=startY;ty<endY;ty++){
-      for(let tx=startX;tx<endX;tx++){
+    // El jugador está en el centro
+    // Cada tile en (tx,ty) se dibuja en:
+    // x = centerX + (tx*T - P.x) * z
+    // y = centerY + (ty*T - P.y) * z
+    
+    // Solo dibujar tiles visibles
+    const visibleTilesX = Math.ceil(cw / ts) + 2;
+    const visibleTilesY = Math.ceil(ch / ts) + 2;
+    
+    const startX = Math.max(0, Math.floor(P.x/T) - Math.floor(visibleTilesX/2) - 1);
+    const startY = Math.max(0, Math.floor(P.y/T) - Math.floor(visibleTilesY/2) - 1);
+    const endX = Math.min(WW, Math.ceil(P.x/T) + Math.ceil(visibleTilesX/2) + 1);
+    const endY = Math.min(WH, Math.ceil(P.y/T) + Math.ceil(visibleTilesY/2) + 1);
+    
+    for(let ty=startY; ty<endY; ty++){
+      for(let tx=startX; tx<endX; tx++){
         const t=world[ty][tx];
         const cs=['#3a6b2a','#5d4037','#0d47a1','#f9a825','#616161','#e0e0e0','#2d5a2d'];
+        
+        // Posición en pantalla
+        const sx = centerX + (tx*T - P.x) * z;
+        const sy = centerY + (ty*T - P.y) * z;
+        
         ctx.fillStyle=cs[t]||'#f0f';
-        ctx.fillRect(tx*tileSize-offsetX,ty*tileSize-offsetY,tileSize+1,tileSize+1);
+        ctx.fillRect(sx, sy, ts+1, ts+1);
         
         if(t===0){
           ctx.fillStyle='#5a9a3a';
-          ctx.fillRect(tx*tileSize-offsetX+4,ty*tileSize-offsetY+28,3,6);
-          ctx.fillRect(tx*tileSize-offsetX+14,ty*tileSize-offsetY+27,3,7);
+          ctx.fillRect(sx+4, sy+28, 3, 6);
+          ctx.fillRect(sx+14, sy+27, 3, 7);
         }
         if(t===2){
           ctx.fillStyle='rgba(66,165,245,0.4)';
-          ctx.fillRect(tx*tileSize-offsetX+4,ty*tileSize-offsetY+10,10,2);
+          ctx.fillRect(sx+4, sy+10, 10, 2);
         }
         if(t===6){
           ctx.fillStyle='#4e342e';
-          ctx.fillRect(tx*tileSize-offsetX+11,ty*tileSize-offsetY+14,10,18);
+          ctx.fillRect(sx+11, sy+14, 10, 18);
           ctx.fillStyle='#1b5e20';
-          ctx.beginPath();
-          ctx.arc(tx*tileSize-offsetX+16,ty*tileSize-offsetY+10,10,0,Math.PI*2);
-          ctx.fill();
+          ctx.beginPath(); ctx.arc(sx+16, sy+10, 10, 0, Math.PI*2); ctx.fill();
           ctx.fillStyle='#2e7d32';
-          ctx.beginPath();
-          ctx.arc(tx*tileSize-offsetX+15,ty*tileSize-offsetY+8,7,0,Math.PI*2);
-          ctx.fill();
+          ctx.beginPath(); ctx.arc(sx+15, sy+8, 7, 0, Math.PI*2); ctx.fill();
         }
       }
     }
+    
+    // Jugador en el centro
+    const bob=P.st==='walk'?[0,-3,0,-3][P.f]:0;
+    const leg=P.st==='walk'?[0,4,0,-4][P.f]:0;
+    const pcx=centerX+16, pcy=centerY+16+bob;
+    
+    ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(pcx, pcy+16, 12, 4, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#5d4037'; ctx.fillRect(pcx-5, pcy+4, 4, 14+leg); ctx.fillRect(pcx+1, pcy+4, 4, 14-leg);
+    ctx.fillStyle='#3e2723'; ctx.fillRect(pcx-5, pcy+16+leg, 4, 4); ctx.fillRect(pcx+1, pcy+16-leg, 4, 4);
+    ctx.fillStyle='#1565c0'; ctx.fillRect(pcx-8, pcy-8, 16, 14); ctx.fillStyle='#1976d2'; ctx.fillRect(pcx-7, pcy-7, 14, 12);
+    ctx.fillStyle='#ffccbc'; ctx.fillRect(pcx-6, pcy-20, 12, 14); ctx.fillStyle='#ffe0b2'; ctx.fillRect(pcx-5, pcy-18, 10, 8);
+    ctx.fillStyle='#3e2723'; ctx.fillRect(pcx-7, pcy-22, 14, 5);
+    if(P.dir!==3){ctx.fillStyle='#fff';ctx.fillRect(pcx-4,pcy-16,4,4);ctx.fillRect(pcx+2,pcy-16,4,4);ctx.fillStyle='#000';ctx.fillRect(pcx-3,pcy-15,2,2);ctx.fillRect(pcx+3,pcy-15,2,2)}
+    if(P.st==='attack'&&P.f<2){ctx.fillStyle='#ccc';ctx.fillRect(pcx+10,pcy-10,4,16);ctx.fillStyle='#ffc107';ctx.fillRect(pcx+7,pcy+4,10,4)}
     
     // Animales
     const AC={deer:[160,120,80],boar:[80,60,40],rabbit:[240,240,240],fox:[200,80,20],wolf:[80,80,80],bird:[40,100,200],cow:[250,250,250],sheep:[250,250,240],pig:[250,180,180],horse:[120,80,60],dog:[250,250,240],cat:[200,100,50],chicken:[250,250,240],fish:[100,180,255]};
     for(const e of entities){
-      const sx=e.x*z-offsetX,sy=e.y*z-offsetY;
-      if(sx<-T||sx>cv.width+T||sy<-T||sy>cv.height+T)continue;
+      const sx=centerX+(e.x-P.x)*z, sy=centerY+(e.y-P.y)*z;
+      if(sx<-50||sx>cv.width+50||sy<-50||sy>cv.height+50)continue;
       
       if(e.t==='a'){
         const c=AC[e.a]||[150,150,150];
         ctx.fillStyle='rgb('+c[0]+','+c[1]+','+c[2]+')';
-        ctx.beginPath();ctx.ellipse(sx+16,sy+18,10,6,0,0,Math.PI*2);ctx.fill();
-        ctx.beginPath();ctx.ellipse(sx+24,sy+10,6,5,0,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle='#212121';ctx.fillRect(sx+26,sy+9,2,2);
+        ctx.beginPath(); ctx.ellipse(sx+16, sy+20, 12, 7, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(sx+26, sy+10, 7, 6, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle='#212121'; ctx.fillRect(sx+28, sy+8, 3, 3);
       } else {
-        ctx.fillStyle='#795548';ctx.fillRect(sx+6,sy+2,20,10);ctx.fillRect(sx+10,sy,12,4);
-        ctx.fillStyle='#ffccbc';ctx.fillRect(sx+8,sy+10,16,10);
-        ctx.fillStyle='#1565c0';ctx.fillRect(sx+6,sy+18,20,12);
-        ctx.fillStyle='#fc0';ctx.font='8px monospace';ctx.textAlign='center';ctx.fillText(e.n,sx+16,sy-4);
+        ctx.fillStyle='#795548'; ctx.fillRect(sx+8, sy+2, 24, 12); ctx.fillRect(sx+12, sy-2, 14, 5);
+        ctx.fillStyle='#ffccbc'; ctx.fillRect(sx+10, sy+12, 20, 12);
+        ctx.fillStyle='#1565c0'; ctx.fillRect(sx+8, sy+22, 24, 14);
+        ctx.fillStyle='#fc0'; ctx.font='10px monospace'; ctx.textAlign='center'; ctx.fillText(e.n, sx+20, sy-6);
       }
     }
-    
-    // Jugador
-    const px=cv.width/2,py=cv.height/2;
-    const bob=P.st==='walk'?[0,-2,0,2][P.f]:0;
-    const leg=P.st==='walk'?[0,3,0,-3][P.f]:0;
-    const pcx=px+16,pcy=py+16+bob;
-    
-    ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(pcx,pcy+14,10,3,0,0,Math.PI*2).fill();
-    ctx.fillStyle='#5d4037';ctx.fillRect(pcx-4,pcy+4,3,12+leg);ctx.fillRect(pcx+1,pcy+4,3,12-leg);
-    ctx.fillStyle='#3e2723';ctx.fillRect(pcx-4,pcy+14+leg,3,3);ctx.fillRect(pcx+1,pcy+14-leg,3,3);
-    ctx.fillStyle='#1565c0';ctx.fillRect(pcx-7,pcy-6,14,12);ctx.fillStyle='#1976d2';ctx.fillRect(pcx-6,pcy-5,12,10);
-    ctx.fillStyle='#ffccbc';ctx.fillRect(pcx-5,pcy-16,10,12);ctx.fillStyle='#ffe0b2';ctx.fillRect(pcx-4,pcy-14,8,6);
-    ctx.fillStyle='#3e2723';ctx.fillRect(pcx-6,pcy-18,12,4);
-    if(P.dir!==3){ctx.fillStyle='#fff';ctx.fillRect(pcx-3,pcy-12,3,3);ctx.fillRect(pcx+2,pcy-12,3,3);ctx.fillStyle='#1a1a1a';ctx.fillRect(pcx-2,pcy-11,2,2);ctx.fillRect(pcx+3,pcy-11,2,2)}
-    if(P.st==='attack'&&P.f<2){ctx.fillStyle='#b0bec5';ctx.fillRect(pcx+9,pcy-8,3,14);ctx.fillStyle='#ffc107';ctx.fillRect(pcx+7,pcy+4,7,3)}
   }
   
   // Minimap
