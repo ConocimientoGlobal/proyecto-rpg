@@ -26,6 +26,10 @@ type AnimationBuilderArgs = {
 const ENEMY_ATTACK_COOLDOWN = 90;
 let enemyAttackTimer = 0;
 
+// Camera position (top-left of viewport)
+let cameraX = 0;
+let cameraY = 0;
+
 const motionControl = ({
   ctx,
   state,
@@ -76,7 +80,7 @@ const motionControl = ({
       if (enemy.alive()) enemy.follow(player, colliders);
     });
 
-    // Apply movement with collision (player moves through world)
+    // Apply movement with collision
     if (futureKeyState.x !== 0 && !playerCollisionsX) {
       player.position.x += futureKeyState.x;
     }
@@ -84,6 +88,18 @@ const motionControl = ({
       player.position.y += futureKeyState.y;
     }
   }
+
+  // Update camera to follow player (center in viewport)
+  const targetCamX = player.position.x - 360;  // VIEW_WIDTH / 2
+  const targetCamY = player.position.y - 640;  // VIEW_HEIGHT / 2
+  
+  // Clamp camera to map bounds
+  const clampedCamX = Math.max(0, Math.min(targetCamX, MAP_WIDTH - 720));
+  const clampedCamY = Math.max(0, Math.min(targetCamY, MAP_HEIGHT - 1280));
+  
+  // Smooth lerp
+  cameraX += (clampedCamX - cameraX) * 0.1;
+  cameraY += (clampedCamY - cameraY) * 0.1;
 
   // Enemy attacks with cooldown
   enemyAttackTimer++;
@@ -125,9 +141,9 @@ export const animationBuilder = ({
   const ctx = canvas.getContext("2d")!;
   const colliders = getColliders();
   
-  // Camera position (top-left of viewport)
-  let camX = player.position.x - 360;  // VIEW_WIDTH / 2
-  let camY = player.position.y - 640;  // VIEW_HEIGHT / 2
+  // Initialize camera
+  cameraX = player.position.x - 360;
+  cameraY = player.position.y - 640;
   
   const animate = (): void => {
     const scale = getScale();
@@ -140,8 +156,8 @@ export const animationBuilder = ({
     ctx.save();
     ctx.scale(scale, scale);
     
-    // Camera transform (follow player)
-    ctx.translate(-camX, -camY);
+    // Camera transform (centered on player)
+    ctx.translate(-cameraX, -cameraY);
     
     // Draw game world
     bg.draw(ctx);
@@ -157,18 +173,6 @@ export const animationBuilder = ({
     
     // Draw HUD (fixed position)
     drawHUD(ctx, player, canvas);
-    
-    // Update camera (smooth follow)
-    const targetCamX = player.position.x - 360;
-    const targetCamY = player.position.y - 640;
-    
-    // Clamp camera to map bounds
-    const clampedCamX = Math.max(0, Math.min(targetCamX, MAP_WIDTH - 720));
-    const clampedCamY = Math.max(0, Math.min(targetCamY, MAP_HEIGHT - 1280));
-    
-    // Smooth lerp
-    camX += (clampedCamX - camX) * 0.1;
-    camY += (clampedCamY - camY) * 0.1;
     
     window.requestAnimationFrame(animate);
     motionControl({ ctx, state, player, enemies, colliders });
