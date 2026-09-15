@@ -102,9 +102,26 @@ export const animationBuilder = ({
   const colliders = getColliders();
   
   const animate = (): void => {
+    // Clear screen
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
+    // Save context and apply camera transform
+    ctx.save();
+    
+    // Scale to fill 9:16 screen
+    const scaleX = canvas.width / 1920;
+    const scaleY = canvas.height / 1440;
+    const scale = Math.max(scaleX, scaleY);
+    
+    ctx.scale(scale, scale);
+    
+    // Center the view on the player
+    const offsetX = -player.position.x + (1920 / 2);
+    const offsetY = -player.position.y + (1440 / 2);
+    ctx.translate(offsetX, offsetY);
+    
+    // Draw game world
     bg.draw(ctx);
     enemies.forEach(enemy => {
       if (enemy.alive()) {
@@ -114,6 +131,9 @@ export const animationBuilder = ({
     player.draw(ctx);
     fg.draw(ctx);
     
+    ctx.restore();
+    
+    // Draw HUD (fixed position)
     drawHUD(ctx, player, canvas);
     
     window.requestAnimationFrame(animate);

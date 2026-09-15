@@ -9,20 +9,21 @@ export const mapSetup = (
   const screenWidth = window.innerWidth;
   const screenHeight = window.innerHeight;
   
-  CANVAS_SCALE = Math.min(screenWidth / map_width, screenHeight / map_height);
-  
-  canvas.width = Math.floor(map_width * CANVAS_SCALE);
-  canvas.height = Math.floor(map_height * CANVAS_SCALE);
-  
-  canvas.style.width = canvas.width + 'px';
-  canvas.style.height = canvas.height + 'px';
+  // Set canvas to fill the entire screen
+  canvas.width = screenWidth;
+  canvas.height = screenHeight;
+  canvas.style.width = screenWidth + 'px';
+  canvas.style.height = screenHeight + 'px';
   canvas.style.position = 'absolute';
-  canvas.style.left = ((screenWidth - canvas.width) / 2) + 'px';
-  canvas.style.top = ((screenHeight - canvas.height) / 2) + 'px';
+  canvas.style.left = '0';
+  canvas.style.top = '0';
+  
+  // Calculate scale to cover the screen (crop sides if needed)
+  // This ensures the game fills a 9:16 screen without black bars
+  CANVAS_SCALE = Math.max(screenWidth / map_width, screenHeight / map_height);
   
   const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
   ctx.imageSmoothingEnabled = false;
-  ctx.scale(CANVAS_SCALE, CANVAS_SCALE);
   
   return canvas;
 };
