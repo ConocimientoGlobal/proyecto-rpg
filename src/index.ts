@@ -124,6 +124,9 @@ const main = async () => {
     { x: 800, y: 400 },
     { x: 1200, y: 200 },
     { x: 500, y: 800 },
+    { x: 1500, y: 600 },
+    { x: 300, y: 1200 },
+    { x: 1000, y: 1000 },
   ];
 
   const enemies = enemyCoords.map(enemyCoords => {
