@@ -220,19 +220,69 @@
       }
     }
     
-    // Jugador en el centro
-    const bob=P.st==='walk'?[0,-3,0,-3][P.f]:0;
-    const leg=P.st==='walk'?[0,4,0,-4][P.f]:0;
+    // Jugador estilo RPG-JS (pixel art 32x32)
+    const bob=P.st==='walk'?[0,-2,0,2][P.f]:0;
+    const leg=P.st==='walk'?[0,3,0,-3][P.f]:0;
     const pcx=centerX+16, pcy=centerY+16+bob;
     
-    ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(pcx, pcy+16, 12, 4, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle='#5d4037'; ctx.fillRect(pcx-5, pcy+4, 4, 14+leg); ctx.fillRect(pcx+1, pcy+4, 4, 14-leg);
-    ctx.fillStyle='#3e2723'; ctx.fillRect(pcx-5, pcy+16+leg, 4, 4); ctx.fillRect(pcx+1, pcy+16-leg, 4, 4);
-    ctx.fillStyle='#1565c0'; ctx.fillRect(pcx-8, pcy-8, 16, 14); ctx.fillStyle='#1976d2'; ctx.fillRect(pcx-7, pcy-7, 14, 12);
-    ctx.fillStyle='#ffccbc'; ctx.fillRect(pcx-6, pcy-20, 12, 14); ctx.fillStyle='#ffe0b2'; ctx.fillRect(pcx-5, pcy-18, 10, 8);
-    ctx.fillStyle='#3e2723'; ctx.fillRect(pcx-7, pcy-22, 14, 5);
-    if(P.dir!==3){ctx.fillStyle='#fff';ctx.fillRect(pcx-4,pcy-16,4,4);ctx.fillRect(pcx+2,pcy-16,4,4);ctx.fillStyle='#000';ctx.fillRect(pcx-3,pcy-15,2,2);ctx.fillRect(pcx+3,pcy-15,2,2)}
-    if(P.st==='attack'&&P.f<2){ctx.fillStyle='#ccc';ctx.fillRect(pcx+10,pcy-10,4,16);ctx.fillStyle='#ffc107';ctx.fillRect(pcx+7,pcy+4,10,4)}
+    // Sombra
+    ctx.fillStyle='rgba(0,0,0,0.3)';
+    ctx.fillRect(pcx-6, pcy+14, 12, 4);
+    
+    // Piernas (pantalón marrón)
+    ctx.fillStyle='#5d4037';
+    ctx.fillRect(pcx-4, pcy+6, 3, 8+leg);
+    ctx.fillRect(pcx+1, pcy+6, 3, 8-leg);
+    // Botas
+    ctx.fillStyle='#3e2723';
+    ctx.fillRect(pcx-4, pcy+12+leg, 3, 3);
+    ctx.fillRect(pcx+1, pcy+12-leg, 3, 3);
+    
+    // Cuerpo (camisa azul con detalles)
+    ctx.fillStyle='#1565c0';
+    ctx.fillRect(pcx-6, pcy-4, 12, 12);
+    ctx.fillStyle='#1976d2';
+    ctx.fillRect(pcx-5, pcy-3, 10, 10);
+    // Cinturón
+    ctx.fillStyle='#8d6e63';
+    ctx.fillRect(pcx-6, pcy+4, 12, 2);
+    ctx.fillStyle='#ffc107';
+    ctx.fillRect(pcx-1, pcy+4, 2, 2); // Hebilla
+    
+    // Cabeza (piel)
+    ctx.fillStyle='#ffccbc';
+    ctx.fillRect(pcx-5, pcy-14, 10, 10);
+    ctx.fillStyle='#ffe0b2';
+    ctx.fillRect(pcx-4, pcy-13, 8, 8);
+    
+    // Pelo castaño
+    ctx.fillStyle='#3e2723';
+    ctx.fillRect(pcx-6, pcy-16, 12, 4);
+    ctx.fillRect(pcx-6, pcy-15, 2, 3);
+    ctx.fillRect(pcx+4, pcy-15, 2, 3);
+    
+    // Ojos
+    if(P.dir!==3){
+      ctx.fillStyle='#fff';
+      ctx.fillRect(pcx-3, pcy-10, 3, 3);
+      ctx.fillRect(pcx+1, pcy-10, 3, 3);
+      ctx.fillStyle='#1a1a1a';
+      ctx.fillRect(pcx-2, pcy-9, 2, 2);
+      ctx.fillRect(pcx+2, pcy-9, 2, 2);
+    }
+    
+    // Brazos
+    ctx.fillStyle='#ffccbc';
+    ctx.fillRect(pcx-8, pcy-2, 3, 8);
+    ctx.fillRect(pcx+5, pcy-2, 3, 8);
+    
+    // Espada (durante ataque)
+    if(P.st==='attack'&&P.f<2){
+      ctx.fillStyle='#b0bec5';
+      ctx.fillRect(pcx+8, pcy-12, 3, 16);
+      ctx.fillStyle='#ffc107';
+      ctx.fillRect(pcx+5, pcy+2, 9, 3);
+    }
     
     // Animales
     const AC={deer:[160,120,80],boar:[80,60,40],rabbit:[240,240,240],fox:[200,80,20],wolf:[80,80,80],bird:[40,100,200],cow:[250,250,250],sheep:[250,250,240],pig:[250,180,180],horse:[120,80,60],dog:[250,250,240],cat:[200,100,50],chicken:[250,250,240],fish:[100,180,255]};
