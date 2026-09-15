@@ -4,6 +4,7 @@ import { getColliders, checkCollision } from "./collider";
 import { BoxCollider } from "./collider";
 import { State } from "../state";
 import { Sprite, Playable } from "../sprites";
+import { hasKey } from "../utils/misc";
 
 type MotionControlArgs = {
   ctx: CanvasRenderingContext2D;
@@ -55,21 +56,14 @@ const motionControl = ({
   if (!movementDirection) {
     player.animate("idle");
   } else {
-    const { velocity } = controller.motion[movementDirection];
+    const { axis, velocity } = controller.motion[movementDirection];
     player.animate(movementDirection);
     enemies.forEach(enemy => {
       if (enemy.alive()) enemy.follow(player, colliders);
     });
 
-    if (!playerCollisions) {
-      const isHorizontal = controller.motion[movementDirection].axis === "x";
-      const delta = velocity;
-      
-      if (isHorizontal) {
-        player.position.x += delta;
-      } else {
-        player.position.y += delta;
-      }
+    if (!playerCollisions && hasKey(player.position, axis)) {
+      player.position[axis] += velocity;
     }
   }
 

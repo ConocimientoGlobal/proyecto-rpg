@@ -5,21 +5,20 @@ export const mapSetup = (
   map_height: number
 ): HTMLCanvasElement => {
   const canvas = <HTMLCanvasElement>document.getElementById("canvas");
-  canvas.width = map_width;
-  canvas.height = map_height;
   
   const screenWidth = window.innerWidth;
   const screenHeight = window.innerHeight;
   
-  const scaleX = screenWidth / map_width;
-  const scaleY = screenHeight / map_height;
-  CANVAS_SCALE = Math.min(scaleX, scaleY);
+  CANVAS_SCALE = Math.min(screenWidth / map_width, screenHeight / map_height);
   
-  canvas.style.width = (map_width * CANVAS_SCALE) + 'px';
-  canvas.style.height = (map_height * CANVAS_SCALE) + 'px';
+  canvas.width = Math.floor(map_width * CANVAS_SCALE);
+  canvas.height = Math.floor(map_height * CANVAS_SCALE);
+  
+  canvas.style.width = canvas.width + 'px';
+  canvas.style.height = canvas.height + 'px';
   canvas.style.position = 'absolute';
-  canvas.style.left = ((screenWidth - map_width * CANVAS_SCALE) / 2) + 'px';
-  canvas.style.top = ((screenHeight - map_height * CANVAS_SCALE) / 2) + 'px';
+  canvas.style.left = ((screenWidth - canvas.width) / 2) + 'px';
+  canvas.style.top = ((screenHeight - canvas.height) / 2) + 'px';
   
   const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
   ctx.imageSmoothingEnabled = false;
