@@ -167,6 +167,14 @@ const main = async () => {
   const canvas = mapSetup(MAP_WIDTH, MAP_HEIGHT);
   configureKeyPress(state.controller);
   configureTouchControls(state.controller);
+  
+  const restartBtn = document.getElementById('restart-btn');
+  if (restartBtn) {
+    restartBtn.addEventListener('click', () => {
+      location.reload();
+    });
+  }
+  
   animationBuilder({ bg, player, state, canvas, fg, enemies });
 };
 
