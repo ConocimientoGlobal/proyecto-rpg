@@ -1,27 +1,322 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>RPGJS Game</title>
-    <meta
-      name="viewport"
-      content="initial-scale=1, maximum-scale=1, user-scalable=no, minimum-scale=1, width=device-width, height=device-height"
-    />
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./node_modules/@rpgjs/ui-css/src/reset.css">
-    <link rel="stylesheet" href="./node_modules/@rpgjs/ui-css/src/index.css">
-    <link rel="stylesheet" href="./node_modules/@rpgjs/ui-css/theme-default/theme.css">
-    <style>
-      body, #rpg {
-        margin: 0;
-        padding: 0;
-        height: 100vh;
-        width: 100vw;
-        overflow: hidden;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="rpg"></div>
-  </body>
+<head>
+<meta charset="utf-8">
+<title>PachaMirai</title>
+<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, minimum-scale=1, width=device-width, height=device-height">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./node_modules/@rpgjs/ui-css/src/reset.css">
+<link rel="stylesheet" href="./node_modules/@rpgjs/ui-css/src/index.css">
+<link rel="stylesheet" href="./node_modules/@rpgjs/ui-css/theme-default/theme.css">
+<style>
+  body, html { height: 100%; overflow: hidden; margin: 0; }
+  body { background: #000; font-family: 'Fredoka', sans-serif; }
+  #rpg-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  /* Controles móvil */
+  #mobile-controls {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Joystick */
+  #joystick {
+    position: absolute;
+    bottom: 40px;
+    left: 40px;
+    width: 130px;
+    height: 130px;
+    background: rgba(255,255,255,0.12);
+    border: 2px solid rgba(255,255,255,0.25);
+    border-radius: 50%;
+    pointer-events: auto;
+    touch-action: none;
+  }
+  #joystick-knob {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 54px; height: 54px;
+    background: rgba(255,255,255,0.45);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+
+  /* Botones de acción */
+  #action-buttons {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    pointer-events: auto;
+  }
+  .action-btn {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: #fff;
+    touch-action: none;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  }
+  .action-btn:active {
+    background: rgba(255,255,255,0.35);
+    transform: scale(0.95);
+  }
+
+  /* Botones superiores */
+  #top-buttons {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    gap: 10px;
+    pointer-events: auto;
+  }
+  .top-btn {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #fff;
+    touch-action: none;
+  }
+
+  /* Barra de vida superior izquierda */
+  #player-panel {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(0,0,0,0.65);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 8px 14px;
+    pointer-events: none;
+  }
+  .bar-label {
+    font-size: 11px;
+    color: #ccc;
+    margin-bottom: 3px;
+  }
+  .bar-outer {
+    width: 100px;
+    height: 8px;
+    background: #222;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .bar-inner {
+    height: 100%;
+    transition: width 0.3s;
+  }
+  .bar-hp .bar-inner { background: linear-gradient(90deg, #e44, #c33); }
+  .bar-mp .bar-inner { background: linear-gradient(90deg, #48f, #36c); }
+  .bar-xp .bar-inner { background: linear-gradient(90deg, #fc0, #c90); }
+
+  /* Hint de rotación */
+  #rotate-hint {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: #0a0a1a;
+    color: #fff;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  /* En desktop ocultar controles móviles */
+  @media (min-width: 1024px) {
+    #joystick, #action-buttons { display: none; }
+  }
+
+  @media screen and (max-width: 800px) and (orientation: portrait) {
+    #rotate-hint { display: flex; }
+  }
+</style>
+</head>
+<body>
+<div id="rpg-container"></div>
+
+<!-- Controles móvil -->
+<div id="mobile-controls">
+  <!-- Panel del jugador -->
+  <div id="player-panel">
+    <div class="bar-label">❤️ HP</div>
+    <div class="bar-outer bar-hp"><div class="bar-inner" id="hp-bar" style="width:100%"></div></div>
+    <div class="bar-label">💧 MP</div>
+    <div class="bar-outer bar-mp"><div class="bar-inner" id="mp-bar" style="width:100%"></div></div>
+    <div class="bar-label">⭐ XP</div>
+    <div class="bar-outer bar-xp"><div class="bar-inner" id="xp-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- Joystick -->
+  <div id="joystick">
+    <div id="joystick-knob"></div>
+  </div>
+
+  <!-- Botones de acción -->
+  <div id="action-buttons">
+    <button class="action-btn" id="btn-attack">⚔️</button>
+    <button class="action-btn" id="btn-interact">✋</button>
+  </div>
+
+  <!-- Botones superiores -->
+  <div id="top-buttons">
+    <button class="top-btn" id="btn-inventory">🎒</button>
+    <button class="top-btn" id="btn-menu">☰</button>
+  </div>
+</div>
+
+<!-- Hint de rotación -->
+<div id="rotate-hint">
+  <div>
+    📱 Girá tu teléfono para jugar
+  </div>
+</div>
+
+<script>
+(function() {
+  // ========== Joystick táctil ==========
+  const joy = document.getElementById('joystick');
+  const knob = document.getElementById('joystick-knob');
+  let active = false;
+  let centerX = 0, centerY = 0;
+  let currentKeys = [];
+
+  function start(e) {
+    active = true;
+    const rect = joy.getBoundingClientRect();
+    centerX = rect.left + rect.width/2;
+    centerY = rect.top + rect.height/2;
+    move(e);
+  }
+
+  function move(e) {
+    if (!active) return;
+    e.preventDefault();
+    const touch = e.touches ? e.touches[0] : e;
+    const dx = touch.clientX - centerX;
+    const dy = touch.clientY - centerY;
+    const dist = Math.min(Math.sqrt(dx*dx+dy*dy), 45);
+    const angle = Math.atan2(dy, dx);
+    const knobX = Math.cos(angle) * dist;
+    const knobY = Math.sin(angle) * dist;
+    knob.style.transform = `translate(calc(-50% + ${knobX}px), calc(-50% + ${knobY}px))`;
+
+    if (dist > 12) {
+      const deg = (angle * 180/Math.PI + 360) % 360;
+      let keys = [];
+      if (deg >= 337.5 || deg < 22.5) keys = ['ArrowRight'];
+      else if (deg >= 22.5 && deg < 67.5) keys = ['ArrowRight', 'ArrowDown'];
+      else if (deg >= 67.5 && deg < 112.5) keys = ['ArrowDown'];
+      else if (deg >= 112.5 && deg < 157.5) keys = ['ArrowLeft', 'ArrowDown'];
+      else if (deg >= 157.5 && deg < 202.5) keys = ['ArrowLeft'];
+      else if (deg >= 202.5 && deg < 247.5) keys = ['ArrowLeft', 'ArrowUp'];
+      else if (deg >= 247.5 && deg < 292.5) keys = ['ArrowUp'];
+      else keys = ['ArrowRight', 'ArrowUp'];
+
+      // Liberar teclas que ya no aplican
+      currentKeys.forEach(key => {
+        if (!keys.includes(key)) {
+          window.dispatchEvent(new KeyboardEvent('keyup', {key}));
+        }
+      });
+      // Presionar nuevas teclas
+      keys.forEach(key => {
+        if (!currentKeys.includes(key)) {
+          window.dispatchEvent(new KeyboardEvent('keydown', {key}));
+        }
+      });
+      currentKeys = keys;
+    } else {
+      end();
+    }
+  }
+
+  function end() {
+    active = false;
+    knob.style.transform = 'translate(-50%, -50%)';
+    currentKeys.forEach(key => {
+      window.dispatchEvent(new KeyboardEvent('keyup', {key}));
+    });
+    currentKeys = [];
+  }
+
+  joy.addEventListener('touchstart', start, {passive: false});
+  joy.addEventListener('touchmove', move, {passive: false});
+  joy.addEventListener('touchend', end);
+  joy.addEventListener('mousedown', start);
+  document.addEventListener('mousemove', (e) => { if(active) move(e); });
+  document.addEventListener('mouseup', end);
+
+  // ========== Botones de acción ==========
+  function bindAction(id, key) {
+    const btn = document.getElementById(id);
+    btn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      window.dispatchEvent(new KeyboardEvent('keydown', {key}));
+    }, {passive: false});
+    btn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      window.dispatchEvent(new KeyboardEvent('keyup', {key}));
+    });
+    btn.addEventListener('click', () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', {key}));
+    });
+  }
+
+  bindAction('btn-attack', ' ');
+  bindAction('btn-interact', 'e');
+
+  // Botones superiores
+  document.getElementById('btn-inventory').addEventListener('click', () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', {key: 'i'}));
+  });
+  document.getElementById('btn-menu').addEventListener('click', () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}));
+  });
+
+  // ========== Actualizar barras (polling cada 500ms) ==========
+  setInterval(() => {
+    try {
+      const hpBar = document.getElementById('hp-bar');
+      const mpBar = document.getElementById('mp-bar');
+      const xpBar = document.getElementById('xp-bar');
+      // RPG-JS no expone estado fácilmente, dejamos las barras estáticas por ahora
+      if (hpBar) hpBar.style.width = '100%';
+      if (mpBar) mpBar.style.width = '100%';
+      if (xpBar) xpBar.style.width = '0%';
+    } catch(e) {}
+  }, 500);
+
+})();
+</script>
+</body>
 </html>
