@@ -125,3 +125,84 @@ export class Heal extends Attack {
     return this;
   }
 }
+
+export class LightningBolt extends Attack {
+  constructor() {
+    super({
+      name: "Lightning Bolt",
+      damage: 120,
+      type: "electric",
+      range: 250,
+      cost: 60,
+      accuracy: 0.85,
+      cooldown: 4,
+      description: "A powerful lightning strike",
+      effects: [],
+    });
+  }
+
+  activate(user: Playable, target: Playable): LightningBolt {
+    const damage = (user.magik / target.immunity) * this.damage;
+    target.takeDamage(damage);
+    user.reduceMana(this.cost);
+    return this;
+  }
+
+  render(
+    user: Playable,
+    target: Playable,
+    ctx: CanvasRenderingContext2D
+  ): LightningBolt {
+    ctx.strokeStyle = "rgba(255, 255, 0, 0.9)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(user.position.x + user.width / 2, user.position.y + user.height / 2);
+    for (let i = 0; i < 5; i++) {
+      const x = user.position.x + (target.position.x - user.position.x) * (i / 5) + randomInt(-30, 30);
+      const y = user.position.y + (target.position.y - user.position.y) * (i / 5) + randomInt(-30, 30);
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(target.position.x + target.width / 2, target.position.y + target.height / 2);
+    ctx.stroke();
+    return this;
+  }
+}
+
+export class PoisonSting extends Attack {
+  constructor() {
+    super({
+      name: "Poison Sting",
+      damage: 30,
+      type: "poison",
+      range: 100,
+      cost: 15,
+      accuracy: 0.9,
+      cooldown: 2,
+      description: "A toxic stab",
+      effects: [],
+    });
+  }
+
+  activate(user: Playable, target: Playable): PoisonSting {
+    const damage = (user.muscle / target.armour) * this.damage;
+    target.takeDamage(damage);
+    user.reduceMana(this.cost);
+    return this;
+  }
+
+  render(
+    user: Playable,
+    target: Playable,
+    ctx: CanvasRenderingContext2D
+  ): PoisonSting {
+    ctx.fillStyle = "rgba(0, 200, 0, 0.6)";
+    for (let i = 0; i < 8; i++) {
+      const x = target.position.x + randomInt(0, target.width);
+      const y = target.position.y + randomInt(0, target.height);
+      ctx.beginPath();
+      ctx.arc(x, y, randomInt(3, 8), 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    return this;
+  }
+}

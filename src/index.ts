@@ -19,6 +19,8 @@ import { SoftGrass } from "./attacks/attackList/softGrass";
 import { CitricHealing } from "./attacks/attackList/citricHealing";
 import { PhotonBeam } from "./attacks/attackList/photonBeam";
 import { ShadowStep } from "./attacks/attackList/ShadowStep";
+import { LightningBolt } from "./attacks/attackList/newAttacks";
+import { PoisonSting } from "./attacks/attackList/newAttacks";
 import { Fireball } from "./attacks/attackList/newAttacks";
 import { IceShard } from "./attacks/attackList/newAttacks";
 
@@ -113,7 +115,7 @@ const main = async () => {
       magik: 15,
       armour: 30,
       immunity: 30,
-      attacks: [new SoftGrass(), new CitricHealing(), new ShadowStep(), new PhotonBeam(), new Fireball(), new IceShard()],
+      attacks: [new SoftGrass(), new CitricHealing(), new ShadowStep(), new PhotonBeam(), new Fireball(), new IceShard(), new LightningBolt(), new PoisonSting()],
     }
   );
   const enemyCoords = [
