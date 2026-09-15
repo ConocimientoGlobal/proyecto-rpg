@@ -1,3 +1,5 @@
+import { VIEW_WIDTH, VIEW_HEIGHT } from "../constants";
+
 let SCALE = 1;
 
 export const mapSetup = (): HTMLCanvasElement => {
@@ -5,11 +7,7 @@ export const mapSetup = (): HTMLCanvasElement => {
   const screenW = window.innerWidth;
   const screenH = window.innerHeight;
 
-  // Fit 9:16 viewport into screen
-  const scaleX = screenW / 720;
-  const scaleY = screenH / 1280;
-  SCALE = Math.max(scaleX, scaleY);
-
+  // Canvas llena toda la pantalla
   canvas.width = screenW;
   canvas.height = screenH;
   canvas.style.width = screenW + "px";

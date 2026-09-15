@@ -1,4 +1,3 @@
-import { getScale } from "./canvas";
 import { MOVESPEED, MAP_WIDTH, MAP_HEIGHT, VIEW_WIDTH, VIEW_HEIGHT } from "../constants";
 import { getColliders, checkCollision } from "./collider";
 import { BoxCollider } from "./collider";
@@ -146,14 +145,18 @@ export const animationBuilder = ({
   cameraY = player.position.y - (VIEW_HEIGHT / 2);
   
   const animate = (): void => {
-    const scale = getScale();
-    
     // Clear screen
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Apply viewport scaling
+    // Save context and apply camera transform
     ctx.save();
+    
+    // Scale to fill screen (zoom in)
+    const scaleX = canvas.width / VIEW_WIDTH;
+    const scaleY = canvas.height / VIEW_HEIGHT;
+    const scale = Math.max(scaleX, scaleY);
+    
     ctx.scale(scale, scale);
     
     // Camera transform (centered on player)
