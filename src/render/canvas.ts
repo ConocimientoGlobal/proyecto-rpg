@@ -19,7 +19,6 @@ export const mapSetup = (
   canvas.style.top = '0';
   
   // Calculate scale to cover the screen (crop sides if needed)
-  // This ensures the game fills a 9:16 screen without black bars
   CANVAS_SCALE = Math.max(screenWidth / map_width, screenHeight / map_height);
   
   const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
