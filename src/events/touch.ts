@@ -37,13 +37,6 @@ export const configureTouchControls = (controller: Controller) => {
     let joystickCenterX = 0;
     let joystickCenterY = 0;
 
-    const directions: { [key: string]: string } = {
-        up: 'w',
-        down: 's',
-        left: 'a',
-        right: 'd'
-    };
-
     joystickZone.addEventListener('touchstart', (e) => {
         e.preventDefault();
         joystickActive = true;

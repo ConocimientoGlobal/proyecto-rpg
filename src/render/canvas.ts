@@ -5,6 +5,18 @@ export const mapSetup = (
   const canvas = <HTMLCanvasElement>document.getElementById("canvas");
   canvas.width = map_width;
   canvas.height = map_height;
+  
+  const screenWidth = window.innerWidth;
+  const screenHeight = window.innerHeight;
+  
+  const scale = Math.min(screenWidth / map_width, screenHeight / map_height);
+  
+  canvas.style.width = (map_width * scale) + 'px';
+  canvas.style.height = (map_height * scale) + 'px';
+  canvas.style.position = 'absolute';
+  canvas.style.left = ((screenWidth - map_width * scale) / 2) + 'px';
+  canvas.style.top = ((screenHeight - map_height * scale) / 2) + 'px';
+  
   return canvas;
 };
 

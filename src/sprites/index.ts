@@ -112,6 +112,21 @@ export class Playable extends Sprite implements IPlayable {
     this.attacks = attacks;
   }
 
+  takeDamage(damage: number): Playable {
+    this.hp = Math.max(0, this.hp - damage);
+    return this;
+  }
+
+  heal(amount: number): Playable {
+    this.hp = Math.min(this.maxHp, this.hp + amount);
+    return this;
+  }
+
+  reduceMana(cost: number): Playable {
+    this.mana = Math.max(0, this.mana - cost);
+    return this;
+  }
+
   idleAnimation(): Playable {
     for (let frameIdx of Object.values(this.directions)) {
       const face = this.currentFrame / this.frames;
@@ -198,99 +213,16 @@ export class Playable extends Sprite implements IPlayable {
     const attack: IAttack = this.attacks[choice];
     const inRange = checkCollision(target, this, { x: 0, y: 0 }, -attack.range);
 
-    if (
-      !inRange ||
-      (attack.damage > 0 && target.hp === 0) ||
-      attack.cost > this.mana
-    ) {
-      return this;
+    if (inRange) {
+      target.takeDamage(attack.damage);
+      if (attack.render) {
+        attack.render(this, target, ctx);
+      }
     }
-
-    const user = this;
-    attack.activate(user, target).render(user, target, ctx);
-    return this;
-  }
-
-  takeDamage(damage: number): Playable {
-    this.hp = Math.max(0, this.hp - damage);
-    return this;
-  }
-
-  heal(bonusHp: number): Playable {
-    this.hp = Math.min(this.maxHp, this.hp + bonusHp);
-    return this;
-  }
-
-  reduceMana(manaCost: number): Playable {
-    this.mana = Math.max(0, this.mana - manaCost);
-    return this;
-  }
-
-  hpBarColor() {
-    if (this.hp / this.maxHp > 0.5) {
-      return "#65d670";
-    } else if (this.hp / this.maxHp > 0.2) {
-      return "#ffd700";
-    } else {
-      return "#ff0000";
-    }
-  }
-
-  drawMeter(ctx: CanvasRenderingContext2D): Playable {
-    const BarMaxWidth = this.width;
-    const x = this.position.x - BAR_OFFSET;
-    const y = this.position.y - 20;
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(
-      x,
-      y,
-      BarMaxWidth + BAR_OFFSET * 2,
-      BAR_HEIGHT + BAR_OFFSET * 2
-    );
-    return this;
-  }
-
-  drawHP(ctx: CanvasRenderingContext2D): Playable {
-    const BarMaxWidth = this.width;
-    const hpBar = (this.hp / this.maxHp) * BarMaxWidth;
-    const x = this.position.x;
-    const y = this.position.y - 20 + BAR_OFFSET;
-    ctx.fillStyle = this.hpBarColor();
-    ctx.fillRect(x, y, hpBar, 5);
-    return this;
-  }
-
-  drawMana(ctx: CanvasRenderingContext2D): Playable {
-    const BarMaxWidth = this.width;
-    const currentMana = (this.mana / this.maxMana) * BarMaxWidth;
-    const x = this.position.x;
-    const y = this.position.y - 20 + BAR_OFFSET + 5 + BAR_OFFSET;
-    const width = currentMana;
-    ctx.fillStyle = "#0077da";
-    ctx.fillRect(x, y, width, 3);
-    return this;
-  }
-
-  drawDebug(ctx: CanvasRenderingContext2D): Playable {
-    ctx.strokeStyle = "rgba(100, 0, 0, 0.5)";
-    ctx.fillStyle = "black";
-    ctx.strokeRect(this.position.x, this.position.y, this.width, this.height);
-    ctx.font = "10px Arial";
-    ctx.fillText(
-      `(${this.position.x}, ${this.position.y})`,
-      this.position.x + 10,
-      this.position.y + this.height + 20
-    );
-    ctx.fillRect(this.position.x, this.position.y, 5, 5);
     return this;
   }
 
   draw(ctx: CanvasRenderingContext2D): Playable {
-    if (this.hp == 0) {
-      return this;
-    }
-    this.drawMeter(ctx).drawHP(ctx).drawMana(ctx);
-
     ctx.drawImage(
       this.image,
       this.currentFrame,
@@ -302,6 +234,41 @@ export class Playable extends Sprite implements IPlayable {
       (this.image.width / this.frames) * this.zoom,
       this.image.height * this.zoom
     );
+
+    const barWidth = this.width;
+    const barHeight = BAR_HEIGHT;
+    const barOffset = BAR_OFFSET;
+
+    ctx.fillStyle = "#333";
+    ctx.fillRect(
+      this.position.x,
+      this.position.y - barOffset - barHeight * 2,
+      barWidth,
+      barHeight
+    );
+    ctx.fillStyle = "#e74c3c";
+    ctx.fillRect(
+      this.position.x,
+      this.position.y - barOffset - barHeight * 2,
+      barWidth * (this.hp / this.maxHp),
+      barHeight
+    );
+
+    ctx.fillStyle = "#333";
+    ctx.fillRect(
+      this.position.x,
+      this.position.y - barOffset - barHeight,
+      barWidth,
+      barHeight
+    );
+    ctx.fillStyle = "#3498db";
+    ctx.fillRect(
+      this.position.x,
+      this.position.y - barOffset - barHeight,
+      barWidth * (this.mana / this.maxMana),
+      barHeight
+    );
+
     return this;
   }
 }
