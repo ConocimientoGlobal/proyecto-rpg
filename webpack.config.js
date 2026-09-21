@@ -23,10 +23,7 @@ module.exports = env => {
         {
           test: /\.tsx?$/,
           loader: 'ts-loader',
-          exclude: /node_modules|\.d\.ts$/,
-          options: {
-            transpileOnly: true
-          }
+          exclude: /node_modules|\.d\.ts$/
         },
         {
             test: /\.d\.ts$/,

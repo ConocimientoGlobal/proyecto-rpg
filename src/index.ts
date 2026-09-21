@@ -1,7 +1,6 @@
 import { Sprite, Playable } from "./sprites";
 import { mapSetup } from "./render/canvas";
 import { configureKeyPress } from "./events/keys";
-import { configureTouchControls } from "./events/touch";
 import { animationBuilder } from "./render/animation";
 import {
   MAP_WIDTH,
@@ -19,11 +18,6 @@ import { SoftGrass } from "./attacks/attackList/softGrass";
 import { CitricHealing } from "./attacks/attackList/citricHealing";
 import { PhotonBeam } from "./attacks/attackList/photonBeam";
 import { ShadowStep } from "./attacks/attackList/ShadowStep";
-import { ThunderStorm } from "./attacks/attackList/newAttacks";
-import { LightningBolt } from "./attacks/attackList/newAttacks";
-import { PoisonSting } from "./attacks/attackList/newAttacks";
-import { Fireball } from "./attacks/attackList/newAttacks";
-import { IceShard } from "./attacks/attackList/newAttacks";
 
 import "./css/style.css";
 import BackgroundSprite from "./img/november.png";
@@ -116,18 +110,10 @@ const main = async () => {
       magik: 15,
       armour: 30,
       immunity: 30,
-      attacks: [new SoftGrass(), new CitricHealing(), new ShadowStep(), new PhotonBeam(), new Fireball(), new IceShard(), new LightningBolt(), new PoisonSting(), new ThunderStorm()],
+      attacks: [new SoftGrass(), new CitricHealing(), new ShadowStep(), new PhotonBeam()],
     }
   );
-  const enemyCoords = [
-    { x: 265, y: 20 },
-    { x: 800, y: 400 },
-    { x: 1200, y: 200 },
-    { x: 500, y: 800 },
-    { x: 1500, y: 600 },
-    { x: 300, y: 1200 },
-    { x: 1000, y: 1000 },
-  ];
+  const enemyCoords = [{ x: 265, y: 20 }] //, { x: 1500, y: 550 }, { x: 500, y: 500 }];
 
   const enemies = enemyCoords.map(enemyCoords => {
     const enemy = new Playable({
@@ -167,17 +153,8 @@ const main = async () => {
       attacks: ["y", "u", "i", "o"],
     },
   });
-  const canvas = mapSetup();
+  const canvas = mapSetup(MAP_WIDTH, MAP_HEIGHT);
   configureKeyPress(state.controller);
-  configureTouchControls(state.controller);
-  
-  const restartBtn = document.getElementById('restart-btn');
-  if (restartBtn) {
-    restartBtn.addEventListener('click', () => {
-      location.reload();
-    });
-  }
-  
   animationBuilder({ bg, player, state, canvas, fg, enemies });
 };
 

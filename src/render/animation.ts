@@ -1,4 +1,5 @@
-import { MOVESPEED, MAP_WIDTH, MAP_HEIGHT, VIEW_WIDTH, VIEW_HEIGHT } from "../constants";
+import { getScale } from "./canvas";
+import { MOVESPEED, MAP_WIDTH, MAP_HEIGHT } from "../constants";
 import { getColliders, checkCollision } from "./collider";
 import { BoxCollider } from "./collider";
 import { State } from "../state";
@@ -22,8 +23,9 @@ type AnimationBuilderArgs = {
   canvas: HTMLCanvasElement;
 };
 
-const ENEMY_ATTACK_COOLDOWN = 90;
+const ENEMY_ATTACK_COOLDOWN = 60;
 let enemyAttackTimer = 0;
+let gameCanvas: HTMLCanvasElement | null = null;
 
 // Camera position (top-left of viewport)
 let cameraX = 0;
@@ -40,93 +42,56 @@ const motionControl = ({
   let futureKeyState: coordinates = { x: 0, y: 0 };
 
   if (controller.isPressed("up")) {
+    futureKeyState.y = MOVESPEED;
+  } else if (controller.isPressed("left")) {
+    futureKeyState.x = MOVESPEED;
+  } else if (controller.isPressed("down")) {
     futureKeyState.y = -MOVESPEED;
-  }
-  if (controller.isPressed("left")) {
+  } else if (controller.isPressed("right")) {
     futureKeyState.x = -MOVESPEED;
   }
-  if (controller.isPressed("down")) {
-    futureKeyState.y = MOVESPEED;
-  }
-  if (controller.isPressed("right")) {
-    futureKeyState.x = MOVESPEED;
-  }
 
-  // Check collisions for each axis separately
-  const playerCollisionsX = colliders.some((collider: BoxCollider) =>
-    checkCollision(player, collider, { x: futureKeyState.x, y: 0 })
-  );
-  const playerCollisionsY = colliders.some((collider: BoxCollider) =>
-    checkCollision(player, collider, { x: 0, y: futureKeyState.y })
+  const playerCollisions = colliders.some((collider: BoxCollider) =>
+    checkCollision(player, collider, futureKeyState)
   );
 
-  const movementDirection = controller.getMovement();
-  
-  if (!movementDirection && futureKeyState.x === 0 && futureKeyState.y === 0) {
-    player.animate("idle");
-  } else {
-    // Determine animation direction
-    if (Math.abs(futureKeyState.x) > Math.abs(futureKeyState.y)) {
-      player.animate(futureKeyState.x > 0 ? "right" : "left");
-    } else if (futureKeyState.y !== 0) {
-      player.animate(futureKeyState.y > 0 ? "down" : "up");
-    } else if (futureKeyState.x !== 0) {
-      player.animate(futureKeyState.x > 0 ? "right" : "left");
+  const moveMobile = (mobile: BoxCollider | Sprite) => {
+    const movementDirection = controller.getMovement();
+    if (!movementDirection) {
+      player.animate("idle");
+      return;
     }
-    
-    // Move enemies toward player
-    enemies.forEach(enemy => {
-      if (enemy.alive()) enemy.follow(player, colliders);
-    });
+    const { axis, velocity } = controller.motion[movementDirection];
+    player.animate(movementDirection);
+    enemies.forEach(enemy => enemy.follow(player, colliders))
 
-    // Apply movement with collision
-    if (futureKeyState.x !== 0 && !playerCollisionsX) {
-      player.position.x += futureKeyState.x;
+    if (!playerCollisions && hasKey(mobile.position, axis)) {
+      mobile.position[axis] += velocity;
     }
-    if (futureKeyState.y !== 0 && !playerCollisionsY) {
-      player.position.y += futureKeyState.y;
-    }
-  }
+  };
+
+  moveMobile(player);
+
+  enemies.forEach((enemy: Playable) => {
+    enemy.regen().attack(player, randomInt(0, enemy.attacks.length - 1), ctx);
+    player.regen().attack(enemy, controller.getAttack(), ctx);
+  })
 
   // Update camera to follow player (center in viewport)
-  const targetCamX = player.position.x - (VIEW_WIDTH / 2);
-  const targetCamY = player.position.y - (VIEW_HEIGHT / 2);
+  const scale = getScale();
+  const viewW = gameCanvas ? gameCanvas.width / scale : 507;
+  const viewH = gameCanvas ? gameCanvas.height / scale : 896;
+  
+  const targetCamX = player.position.x - (viewW / 2);
+  const targetCamY = player.position.y - (viewH / 2);
   
   // Clamp camera to map bounds
-  const clampedCamX = Math.max(0, Math.min(targetCamX, MAP_WIDTH - VIEW_WIDTH));
-  const clampedCamY = Math.max(0, Math.min(targetCamY, MAP_HEIGHT - VIEW_HEIGHT));
+  const clampedCamX = Math.max(0, Math.min(targetCamX, MAP_WIDTH - viewW));
+  const clampedCamY = Math.max(0, Math.min(targetCamY, MAP_HEIGHT - viewH));
   
   // Smooth lerp
   cameraX += (clampedCamX - cameraX) * 0.1;
   cameraY += (clampedCamY - cameraY) * 0.1;
-
-  // Enemy attacks with cooldown
-  enemyAttackTimer++;
-  if (enemyAttackTimer >= ENEMY_ATTACK_COOLDOWN) {
-    enemyAttackTimer = 0;
-    enemies.forEach((enemy: Playable) => {
-      if (enemy.alive()) {
-        enemy.regen().attack(player, 0, ctx);
-      }
-    });
-  }
-
-  // Player regen
-  player.regen();
-  
-  // Player attacks
-  const attackChoice = controller.getAttack();
-  if (attackChoice !== null && enemies.length > 0) {
-    const aliveEnemies = enemies.filter(e => e.alive());
-    if (aliveEnemies.length > 0) {
-      const closestEnemy = aliveEnemies.reduce((closest, enemy) => {
-        const distToEnemy = Math.abs(enemy.position.x - player.position.x) + Math.abs(enemy.position.y - player.position.y);
-        const distToClosest = Math.abs(closest.position.x - player.position.x) + Math.abs(closest.position.y - player.position.y);
-        return distToEnemy < distToClosest ? enemy : closest;
-      });
-      player.attack(closestEnemy, attackChoice, ctx);
-    }
-  }
 };
 
 export const animationBuilder = ({
@@ -137,26 +102,23 @@ export const animationBuilder = ({
   fg,
   enemies,
 }: AnimationBuilderArgs): void => {
-  const ctx = canvas.getContext("2d")!;
+  const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
   const colliders = getColliders();
+  gameCanvas = canvas;
   
   // Initialize camera
-  cameraX = player.position.x - (VIEW_WIDTH / 2);
-  cameraY = player.position.y - (VIEW_HEIGHT / 2);
+  cameraX = player.position.x - 253;
+  cameraY = player.position.y - 448;
   
   const animate = (): void => {
+    const scale = getScale();
+    
     // Clear screen
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Save context and apply camera transform
+    // Apply viewport scaling
     ctx.save();
-    
-    // Scale to fill screen (zoom in)
-    const scaleX = canvas.width / VIEW_WIDTH;
-    const scaleY = canvas.height / VIEW_HEIGHT;
-    const scale = Math.max(scaleX, scaleY);
-    
     ctx.scale(scale, scale);
     
     // Camera transform (centered on player)
@@ -164,17 +126,13 @@ export const animationBuilder = ({
     
     // Draw game world
     bg.draw(ctx);
-    enemies.forEach(enemy => {
-      if (enemy.alive()) {
-        enemy.draw(ctx);
-      }
-    });
     player.draw(ctx);
+    enemies.forEach(enemy => enemy.draw(ctx));
     fg.draw(ctx);
     
     ctx.restore();
     
-    // Draw HUD (fixed position)
+    // Draw HUD
     drawHUD(ctx, player, canvas);
     
     window.requestAnimationFrame(animate);
@@ -225,4 +183,8 @@ const drawHUD = (ctx: CanvasRenderingContext2D, player: Playable, canvas: HTMLCa
     const restartBtn = document.getElementById('restart-btn');
     if (restartBtn) restartBtn.style.display = 'block';
   }
+};
+
+const randomInt = (min: number, max: number): number => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 };
